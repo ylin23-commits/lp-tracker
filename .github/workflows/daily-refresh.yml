@@ -1,0 +1,52 @@
+name: LP Tracker Daily Refresh
+
+on:
+  schedule:
+    # 00:00 UTC = 08:00 Beijing (Asia/Shanghai, UTC+8)
+    - cron: "0 0 * * *"
+  # Allow manual trigger from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    name: Fetch & publish
+    runs-on: ubuntu-latest
+
+    # Allow the job to push commits back to the repo
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # No third-party packages needed — script uses only stdlib + optional Anthropic SDK.
+      # Install anthropic only when the key is present (keeps free runs fast).
+      - name: Install dependencies
+        run: |
+          pip install --quiet anthropic || true
+
+      - name: Run refresh script
+        env:
+          # Add ANTHROPIC_API_KEY in repo Settings → Secrets → Actions.
+          # If absent, the script falls back to template-based descriptions.
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python scripts/refresh.py
+
+      - name: Commit & push if changed
+        run: |
+          git config user.name  "lp-tracker[bot]"
+          git config user.email "lp-tracker-bot@users.noreply.github.com"
+          git add public/index.html
+          # Only commit when there are actual changes
+          if git diff --staged --quiet; then
+            echo "No changes — skipping commit."
+          else
+            git commit -m "chore: daily refresh $(TZ=Asia/Shanghai date +'%Y-%m-%d %H:%M')"
+            git push
+          fi
