@@ -1,0 +1,1683 @@
+<!doctype html><script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Lp Tracker",
+  "schemaVersion": 1,
+  "description": "中国一级股权LP遴选追踪：政府引导基金/国资母基金、市场化母基金、险资的近一周GP遴选/出资公告，附返投比例与每周一级市场募资分析。已剔除S基金。每日由 lp-tracker-refresh 任务自动更新。"
+}
+</script>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>中国一级股权LP遴选追踪 · 2026 Q3</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f5f5f7;
+  --card: #ffffff;
+  --ink: #1d1d1f;
+  --ink-secondary: #6e6e73;
+  --ink-tertiary: #86868b;
+  --hairline: rgba(0, 0, 0, 0.08);
+  --hairline-soft: rgba(0, 0, 0, 0.04);
+  --accent: #0071e3;
+  --accent-hover: #0077ed;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.08);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue",
+               "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.003em;
+}
+.wrap {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 56px 32px 96px;
+}
+
+/* ---------- Header ---------- */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+h1 {
+  font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  margin: 0 0 4px;
+  color: var(--ink);
+}
+.meta {
+  font-size: 13px;
+  color: var(--ink-secondary);
+  letter-spacing: -0.005em;
+}
+.meta strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* ---------- Disclaimer ---------- */
+.disclaimer {
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  padding: 14px 18px;
+  margin: 28px 0 20px;
+  font-size: 13px;
+  color: var(--ink-secondary);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  line-height: 1.55;
+}
+
+/* ---------- Toolbar ---------- */
+.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+.toolbar-label {
+  font-size: 12px;
+  color: var(--ink-tertiary);
+  margin-right: 8px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+button, .chip {
+  font: inherit;
+  font-size: 13px;
+  border: 1px solid transparent;
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--ink);
+  padding: 7px 14px;
+  border-radius: 980px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: -0.005em;
+}
+.chip:hover { background: rgba(0, 0, 0, 0.08); }
+.chip.active {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+button.primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  font-weight: 500;
+}
+button.primary:hover { background: var(--accent-hover); }
+button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---------- Legend ---------- */
+.legend {
+  font-size: 11.5px;
+  color: var(--ink-tertiary);
+  margin: 10px 0 24px;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+}
+.legend > span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ---------- Feed ---------- */
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.day-header {
+  font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  padding: 28px 0 12px;
+  margin-top: 8px;
+}
+.day-header .day-meta {
+  color: var(--ink-tertiary);
+  font-weight: 400;
+  font-size: 14px;
+  margin-left: 10px;
+  letter-spacing: -0.005em;
+}
+
+/* ---------- News item card ---------- */
+.news-item {
+  display: grid;
+  grid-template-columns: 88px 1fr 130px;
+  gap: 20px;
+  padding: 20px 22px;
+  background: var(--card);
+  border-radius: 16px;
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.news-item:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ---------- Date column ---------- */
+.news-date {
+  font-size: 13px;
+  color: var(--ink-secondary);
+  font-variant-numeric: tabular-nums;
+  padding-top: 2px;
+}
+.news-date .precise {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+.news-date .approx {
+  color: var(--ink-tertiary);
+  font-size: 11px;
+  font-style: normal;
+}
+.news-date .day-ago {
+  font-size: 11px;
+  color: var(--ink-tertiary);
+  margin-top: 3px;
+}
+
+/* ---------- Body ---------- */
+.news-body { min-width: 0; }
+.news-meta-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+/* Category pills — Apple-muted palette */
+.cat-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 980px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+.cat-gov {
+  background: rgba(52, 199, 89, 0.12);
+  color: #216e39;
+}
+.cat-market {
+  background: rgba(88, 86, 214, 0.12);
+  color: #4d47c4;
+}
+.cat-ins {
+  background: rgba(255, 149, 0, 0.14);
+  color: #a15600;
+}
+.cat-listed {
+  background: rgba(0, 190, 175, 0.13);
+  color: #0a5e5b;
+}
+
+/* Feedback pills */
+.fb {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 980px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  letter-spacing: -0.005em;
+}
+.fb-strict { background: rgba(255, 59, 48, 0.10); color: #a02017; }
+.fb-mid    { background: rgba(255, 149, 0, 0.12); color: #8a4a00; }
+.fb-soft   { background: rgba(52, 199, 89, 0.12); color: #216e39; }
+.fb-none   { background: rgba(0, 122, 255, 0.10); color: #054a9e; }
+.fb-unk    { background: rgba(0, 0, 0, 0.06); color: #6e6e73; }
+
+.star {
+  color: #b7791f;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: -0.005em;
+}
+
+.news-title {
+  font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 6px;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+}
+.news-action {
+  font-size: 14px;
+  color: var(--ink);
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+.news-detail {
+  font-size: 13px;
+  color: var(--ink-secondary);
+  line-height: 1.6;
+  letter-spacing: -0.003em;
+}
+.news-detail .kv { display: inline-block; margin-right: 14px; }
+.news-detail .kv-label {
+  color: var(--ink-tertiary);
+  font-weight: 400;
+}
+
+/* ---------- Link column ---------- */
+.news-link { text-align: right; padding-top: 2px; }
+.news-link a {
+  display: inline-block;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  transition: color 0.15s ease;
+}
+.news-link a:hover { color: var(--accent-hover); text-decoration: underline; }
+.news-link .src-name {
+  font-size: 11px;
+  color: var(--ink-tertiary);
+  display: block;
+  margin-top: 4px;
+  font-weight: 400;
+}
+
+/* ---------- Footer ---------- */
+footer {
+  margin-top: 56px;
+  padding-top: 24px;
+  border-top: 1px solid var(--hairline);
+  font-size: 12px;
+  color: var(--ink-tertiary);
+  line-height: 1.6;
+}
+footer code {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: "SF Mono", ui-monospace, "Menlo", monospace;
+}
+
+.status-msg {
+  font-size: 12px;
+  color: var(--ink-tertiary);
+  margin-left: 8px;
+}
+.lvl {
+  display: inline-block; padding: 1px 7px; border-radius: 3px;
+  font-size: 10px; font-weight: 600; white-space: nowrap; margin-left: 2px;
+}
+.lvl-national   { background: #e8d4d4; color: #7a1a1a; }
+.lvl-provincial { background: #d4e0f0; color: #1a3a7a; }
+.lvl-county     { background: #ded4e8; color: #4a2a7a; }
+
+
+/* ---------- Responsive ---------- */
+@media (max-width: 720px) {
+  .wrap { padding: 32px 20px 64px; }
+  h1 { font-size: 30px; }
+  .news-item {
+    grid-template-columns: 68px 1fr;
+    padding: 16px 18px;
+    gap: 14px;
+  }
+  .news-link {
+    grid-column: 1 / -1;
+    text-align: left;
+    padding-top: 12px;
+    border-top: 1px solid var(--hairline-soft);
+    margin-top: 4px;
+  }
+  .day-header { font-size: 20px; }
+  .news-title { font-size: 16px; }
+}
+
+.news-detail-body {
+  display: block;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--hairline-soft);
+  color: var(--ink-secondary);
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>中国一级股权LP遴选追踪</h1>
+      <div class="meta">政府引导基金 · 国资母基金 · 市场化母基金 · 险资 · 上市公司CVC &nbsp;|&nbsp; 最近更新：<strong id="last-updated">2026-08-23 21:48</strong> &nbsp;|&nbsp; <span id="visible-count"></span></div>
+    </div>
+    <div class="meta">数据窗口：2026/4/1 – 今天（剔除S基金）</div>
+  </header>
+  <div class="disclaimer">
+    按事件日期倒序排列。日期粗体=有具体公告日；斜体=按报道月份近似；带 <span class="star">★</span> 的为近7天事件。每条点右侧链接看原文。<br><span style="color:var(--ink-tertiary);font-size:12px;">⚑ 上市公司CVC/做LP 条目的<b>层级</b>按<b>所投基金</b>标注：有央企/国家级资本参与的基金 = 国家级；省市政府或省市国资背景 = 省市级；高新区/县区/纯市场化园区基金 = 县区级；基金信息不明默认省市级。</span>
+  </div>
+  <div class="toolbar">
+    <span class="toolbar-label">LP类型</span>
+    <span class="chip active" data-type="cat" data-val="all">全部</span>
+    <span class="chip" data-type="cat" data-val="gov">政府引导基金/国资母基金</span>
+    <span class="chip" data-type="cat" data-val="market">市场化母基金</span>
+    <span class="chip" data-type="cat" data-val="ins">险资</span>
+    <span class="chip" data-type="cat" data-val="listed">上市公司CVC/做LP</span>
+  </div>
+  <div class="toolbar">
+    <span class="toolbar-label">层级</span>
+    <span class="chip active" data-type="lvl" data-val="all">全部</span>
+    <span class="chip" data-type="lvl" data-val="national">国家级</span>
+    <span class="chip" data-type="lvl" data-val="provincial">省市级</span>
+    <span class="chip" data-type="lvl" data-val="county">县区级</span>
+  </div>
+  <div class="toolbar">
+    <span class="toolbar-label">时间窗</span>
+    <span class="chip" data-type="window" data-val="7">近7天</span>
+    <span class="chip" data-type="window" data-val="30">近30天</span>
+    <span class="chip active" data-type="window" data-val="90">近90天</span>
+    <span class="chip" data-type="window" data-val="all">全部</span>
+    <button class="primary" onclick="refreshNow()">立即刷新</button>
+    <span class="status-msg" id="status-msg"></span>
+  </div>
+  <div class="legend">
+    <span><span class="fb fb-strict">&ge;2倍</span>严苛</span>
+    <span><span class="fb fb-mid">1.2-1.5倍</span>中等</span>
+    <span><span class="fb fb-soft">0.4-1倍</span>友好</span>
+    <span><span class="fb fb-none">无/取消</span></span>
+    <span><span class="fb fb-unk">未公开</span></span>
+  </div>
+  <div id="content" class="feed"></div>
+  <footer>
+    数据来源：发改委、各省市政府引导基金官网、证监会、中国基金报、证券时报、新浪财经、澎湃、虎嗅、阿里云创新中心、投中网、36氪、每经网、IT桔子、母基金研究中心、21经济网、界面新闻、同花顺、东方财富等公开页面。<br>
+    自动刷新由后台 scheduled task <code>lp-tracker-refresh</code> 每日执行；数据条目以&ldquo;原始公告优先&rdquo;原则汇总。S基金（接续基金/份额转让）已全部剔除。
+  </footer>
+</div>
+
+<script>
+const DATA = {
+  lastUpdated: "2026-09-09 11:21",
+  rows: [
+    { date: "2026-09-09", precise: true, cat: "market", level: "provincial", name: "完美世界（002624.SZ）· 认购投资基金份额（新一期公告）", action: "上市公司完美世界再次公告认购投资基金份额，以LP身份认购新一期投资基金，深化产业协同布局", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（新认购公告）；完美世界（002624.SZ）为游戏/影视内容/数字娱乐综合文化企业（深交所主板），持续以LP身份布局投资基金；系继2026-09-05进展公告后新发布的基金份额认购公告（公告编号1225554225），为不同基金或新一期认购；聚焦游戏/数字内容/AI文娱/文化科技相关产业投资；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-09/1225554225.PDF）", industry: "游戏、数字内容、AI文娱", url: "http://static.cninfo.com.cn/finalpage/2026-09-09/1225554225.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-09", precise: true, cat: "market", level: "provincial", name: "珀莱雅（603605.SH）· 全资子公司参与认购投资基金份额", action: "上市公司珀莱雅全资子公司公告参与认购投资基金份额，以LP身份布局产业协同投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；珀莱雅化妆品股份有限公司（603605.SH）为国内美妆护肤头部上市企业（上交所主板），主营珀莱雅/彩棠/Off&amp;Relax等品牌；全资子公司以LP身份参与认购投资基金份额，聚焦美妆/消费/生物科技/新材料等产业链相关赛道；系上市消费品公司以CVC方式拓展产业协同投资；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-09/1225554089.PDF）", industry: "美妆、护肤、消费品、生物科技", url: "http://static.cninfo.com.cn/finalpage/2026-09-09/1225554089.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-09", precise: true, cat: "market", level: "provincial", name: "华峰化学（002064.SZ）· 对外投资进展", action: "上市公司华峰化学公告对外投资进展，持续推进LP出资落地", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展；华峰化学（002064.SZ）为聚氨酯原料/氨纶/锂电池铝箔化工新材料龙头（深交所主板，浙江华峰集团旗下），主营聚氨酯组合料/己二酸/氨纶及锂电铝箔；对外投资进展公告，持续推进LP产业投资布局；聚焦新材料/化工/锂电/新能源材料相关产业链；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-09/1225554594.PDF）", industry: "聚氨酯、氨纶、锂电铝箔、化工新材料", url: "http://static.cninfo.com.cn/finalpage/2026-09-09/1225554594.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-09", precise: true, cat: "market", level: "provincial", name: "三人行（605168.SH）· 对外投资公告", action: "上市公司三人行公告对外投资，以LP身份参与产业基金投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；三人行（605168.SH）为整合营销/广告/数字营销服务商（上交所主板），主营品牌整合传播/数字营销/内容营销等综合广告服务；对外投资公告，以LP身份布局产业协同投资，聚焦广告营销科技/数字内容/AI营销/媒体科技相关赛道；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-09/1225554669.PDF）", industry: "广告营销、数字营销、媒体科技、AI营销", url: "http://static.cninfo.com.cn/finalpage/2026-09-09/1225554669.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-09", precise: true, cat: "market", level: "provincial", name: "强一股份（688809.SH）· 对外投资进展暨全资子公司完成工商变更登记", action: "科创板上市公司强一股份公告对外投资进展，全资子公司已完成工商变更登记，投资落地进入实质运营阶段", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展（工商变更落地）；强一股份（688809.SH）为科创板半导体/先进封装/芯片制造材料相关上市企业；全资子公司完成工商变更登记，对外投资进入实质运营阶段；聚焦半导体/集成电路/先进制造产业链协同投资；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-09/1225553914.PDF）", industry: "半导体、先进封装、芯片制造材料", url: "http://static.cninfo.com.cn/finalpage/2026-09-09/1225553914.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-08", precise: true, cat: "market", level: "provincial", name: "皖天然气（603689.SH）· 对外投资暨关联交易", action: "上市公司皖天然气公告对外投资暨关联交易，以LP身份参与相关投资基金，构成关联交易", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（关联交易）；皖天然气股份有限公司（603689.SH）为安徽省天然气城市燃气分销运营商（上交所主板），主营天然气管道输送/城市燃气/LNG等；对外投资暨关联交易公告，以LP身份参与相关产业投资基金，聚焦能源/清洁能源/新能源基础设施/天然气产业链相关赛道；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-08/1225551625.PDF）", industry: "天然气、城市燃气、清洁能源、LNG", url: "http://static.cninfo.com.cn/finalpage/2026-09-08/1225551625.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-08", precise: true, cat: "market", level: "provincial", name: "乐心医疗（300562.SZ）· 认购合伙企业财产份额暨与专业投资机构共同投资", action: "上市公司乐心医疗调整为认购合伙企业财产份额方式，与专业投资机构共同投资，以LP身份参与产业投资布局", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（方式调整）；乐心医疗（300562.SZ）为可穿戴健康设备/智慧医疗解决方案上市企业（深交所创业板），主营智能健康手环/健康监测设备/智慧医院等；将原受让合伙企业财产份额方式调整为认购合伙企业财产份额，与专业投资机构共同出资参与产业基金，聚焦数字健康/医疗器械/AI医疗赛道；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-08/1225554384.PDF）", industry: "可穿戴健康设备、智慧医疗、数字健康、AI医疗", url: "http://static.cninfo.com.cn/finalpage/2026-09-08/1225554384.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-08", precise: true, cat: "market", level: "provincial", name: "华西股份（000936.SZ）· 认购合伙企业份额暨关联交易进展", action: "上市公司华西股份公告认购合伙企业份额暨关联交易进展，持续推进LP出资落地", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展（关联交易）；华西股份（000936.SZ）为精细化工/磷化工/新材料上市企业（深交所主板），主营磷酸铁锂/磷化工/特种化学品等；认购合伙企业份额暨关联交易进展公告，持续推进LP投资落地；聚焦化工新材料/锂电材料/新能源相关产业链；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-08/1225550540.PDF）", industry: "精细化工、磷化工、锂电材料、新材料", url: "http://static.cninfo.com.cn/finalpage/2026-09-08/1225550540.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-08", precise: true, cat: "market", level: "provincial", name: "长芯博创（300548.SZ）· 参与设立并购基金暨关联交易进展", action: "上市公司长芯博创参与设立并购基金暨关联交易进展，以LP身份推进并购基金落地运营", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（并购基金进展）；长芯博创科技股份有限公司（300548.SZ）为半导体/芯片设计/集成电路设计上市企业（深交所创业板），主营数模混合集成电路/传感器/电源管理芯片；参与设立并购基金暨关联交易进展公告，以LP身份布局并购整合，聚焦半导体/芯片设计/集成电路产业链并购整合赛道；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-08/1225553618.PDF）", industry: "半导体、芯片设计、集成电路、并购整合", url: "http://static.cninfo.com.cn/finalpage/2026-09-08/1225553618.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-08", precise: true, cat: "market", level: "provincial", name: "兆丰股份（300695.SZ）· 参与投资设立合伙企业进展", action: "上市公司兆丰股份公告参与投资设立合伙企业的进展，以LP身份推进基金落地", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展；兆丰股份（300695.SZ）为精密轴承/精密机械零部件制造商（深交所创业板），主营乘用车/商用车精密轮毂轴承单元及汽车零部件；参与投资设立合伙企业进展公告，以LP身份推进基金落地；聚焦汽车零部件/精密制造/智能汽车/新能源汽车产业链；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-08/1225553271.PDF）", industry: "精密轴承、汽车零部件、智能汽车、精密制造", url: "http://static.cninfo.com.cn/finalpage/2026-09-08/1225553271.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-05", precise: true, cat: "gov", level: "provincial", name: "亳州战略性新兴产业基金（约40亿）· 古井集团+亳州国资+合肥国资联合发起", action: "安徽亳州市联合古井集团、亳州国资、合肥国资共同发起设立亳州战略性新兴产业基金，规模约40亿元，聚焦现代中医药/大健康/智能制造等亳州优势新兴产业", size: "约40亿元", fbType: "soft", fbText: "聚焦亳州及安徽战新产业", detail: "地方国资+龙头酒企产业基金新设；亳州为&ldquo;药都&rdquo;+&ldquo;白酒之乡&rdquo;双重特色城市；古井集团（古井贡酒母公司）以产业方+出资人角色参与，与亳州国资委、合肥国资共同构建安徽省内跨区域联合引导基金；聚焦现代中医药/中药材/大健康/白酒周边高端制造/生物科技等亳州优势产业与新兴赛道；古井集团CVC角色兼具引领社会资本作用；数据源：投中网LP周报（2026-09-05）", industry: "现代中医药、大健康、白酒产业链、生物科技（安徽亳州）", url: "#", urlLabel: "投中网LP周报" },
+    { date: "2026-09-05", precise: true, cat: "gov", level: "provincial", name: "广州越秀产融领航重器股权投资基金（50亿）· 越秀集团主导国资产业基金新设", action: "广州越秀集团旗下产融平台主导设立广州越秀产融领航重器股权投资基金，总规模50亿元，聚焦重大装备/制造业核心技术/产业链关键环节", size: "50亿元", fbType: "soft", fbText: "聚焦广州及大湾区重器制造", detail: "国资产业基金新设；越秀集团为广州市国资委旗下多元化国资集团（产融/地产/金融等），旗下越秀产融为产融结合平台；以&ldquo;领航重器&rdquo;命名，聚焦重大装备/制造业核心技术/产业链关键环节/军民融合等大国重器赛道；50亿规模体现广州市国资在高端制造方向的持续加码；数据源：投中网LP周报（2026-09-05）", industry: "重大装备、制造业核心技术、高端制造（广州/粤港澳）", url: "#", urlLabel: "投中网LP周报" },
+    { date: "2026-09-05", precise: true, cat: "gov", level: "national", name: "广西现代化产业投资基金（30亿）· 广西财金创业投资主导新设", action: "广西财金创业投资有限公司主导设立广西现代化产业投资基金，总规模30亿元，聚焦广西&ldquo;14+10&rdquo;产业体系支柱产业及新兴赛道", size: "30亿元", fbType: "soft", fbText: "聚焦广西14+10产业布局返投", detail: "省级国资母基金新设；广西财金创业投资为广西财政厅旗下产业投资平台；广西现代化产业投资基金以省级资金引导社会资本参与广西工业化现代化进程；聚焦广西&ldquo;14+10&rdquo;产业体系（14个支柱产业+10大重点领域），包括糖/铝/锰/汽车/机械/电子/新能源等广西特色产业；数据源：投中网LP周报（2026-09-05）", industry: "糖、铝、锰、汽车、机械、电子、新能源（广西产业体系）", url: "#", urlLabel: "投中网LP周报" },
+    { date: "2026-09-05", precise: true, cat: "market", level: "provincial", name: "杭州石溪兆易一号创业投资合伙企业（27.85亿）· 东方证券+巨人网络+浙商证券联合设立", action: "杭州石溪兆易一号创业投资合伙企业正式设立，规模27.85亿元，由东方证券、巨人网络、浙商证券等联合出资，市场化GP主导", size: "27.85亿元", fbType: "none", fbText: "市场化多元LP联合", detail: "市场化多元LP联合投资基金新设；东方证券（600958.SH）券商直投平台+巨人网络（游戏行业龙头）+浙商证券（601878.SH）联合出资，体现券商直投+产业资本+游戏互联网跨界合作；规模27.85亿元，落地杭州；管理人石溪兆易（杭州）投资管理，聚焦数字经济/人工智能/游戏科技/文化数字化等赛道；数据源：投中网LP周报（2026-09-05）", industry: "数字经济、人工智能、游戏科技、文化数字化（杭州）", url: "#", urlLabel: "投中网LP周报" },
+    { date: "2026-09-05", precise: true, cat: "gov", level: "provincial", name: "济南财兴金造股权投资基金（5.05亿）· 济南高新区纯国资设立", action: "济南高新区国有资本主导设立济南财兴金造股权投资基金，规模5.05亿元，纯国资出资架构，聚焦高新区智能制造/高端装备/新材料产业", size: "5.05亿元", fbType: "soft", fbText: "聚焦济南高新区产业招商引资", detail: "区级国资产业基金新设；济南高新区为山东省高端制造与科技创新核心载体；财兴金造基金为纯国资架构（高新区政府资本），以产业基金方式撬动产业链招商引资；聚焦智能制造/高端装备/新材料/先进制造等济南高新区优势赛道；数据源：投中网LP周报（2026-09-05）", industry: "智能制造、高端装备、新材料、先进制造（济南高新区）", url: "#", urlLabel: "投中网LP周报" },
+    { date: "2026-09-05", precise: true, cat: "gov", level: "provincial", name: "济钢航空航天股权投资基金（4亿）· 济钢产业母基金+西南证券联合设立", action: "济钢集团与西南证券联合设立济钢航空航天股权投资基金，规模4亿元，聚焦航空航天/军民融合/高端特种材料", size: "4亿元", fbType: "soft", fbText: "聚焦济南/山东航空航天产业链", detail: "国企转型CVC+券商联合产业基金新设；济钢集团为山东省钢铁国企转型标杆（已关停炼铁炼钢），全面转型军民融合/航空航天/特种材料方向；联合西南证券（601377.SH）直投平台共同设立，专攻航空航天/军民融合/高端特种材料赛道；系济钢产业母基金体系下设立的专项子基金；数据源：投中网LP周报（2026-09-05）", industry: "航空航天、军民融合、特种材料、高端制造（济南）", url: "#", urlLabel: "投中网LP周报" },
+    { date: "2026-09-05", precise: true, cat: "gov", level: "national", name: "深圳欣创科技生命私募创业投资基金（5亿）· 光明科学城+国家战新联合设立", action: "深圳光明科学城联合国家战略性新兴产业母基金体系共同设立深圳欣创科技生命私募创业投资基金，规模5亿元，聚焦生命科学/生物科技/医疗器械前沿赛道", size: "5亿元", fbType: "soft", fbText: "聚焦深圳光明科学城生命科学产业集群", detail: "国家战新+区域科学城联合生命科技专项基金新设；深圳光明科学城为国家重大科技基础设施集聚区，是大湾区生命科学研究核心载体（合成生物/脑科学/精准医疗等）；联合国家战略性新兴产业母基金体系资金，以创业投资方式撬动生命科学前沿赛道投资；5亿规模体现光明科学城产业化推进步伐；数据源：投中网LP周报（2026-09-05）", industry: "生命科学、生物科技、医疗器械、合成生物（深圳光明科学城）", url: "#", urlLabel: "投中网LP周报" },
+    { date: "2026-09-05", precise: true, cat: "market", level: "national", name: "中信金石（北京）新兴产业股权基金（8.89亿）· 中信集团内部资本纯市场化设立", action: "中信证券旗下中信金石基金设立中信金石（北京）新兴产业股权基金，规模8.89亿元，中信集团内部资本出资，纯市场化运作架构，聚焦新兴产业方向", size: "8.89亿元", fbType: "none", fbText: "中信集团内部资本/市场化", detail: "头部券商旗下PE市场化新基金设立；中信金石基金为中信证券（600030.SH）旗下直投PE平台，管理资产规模百亿量级；以中信集团内部资本为主要LP的纯市场化架构，专注新兴产业方向股权投资；落地北京；聚焦AI/半导体/新能源/高端制造/新一代信息技术等中信产业协同赛道；数据源：投中网LP周报（2026-09-05）", industry: "新兴产业（AI/半导体/新能源/高端制造，北京）", url: "#", urlLabel: "投中网LP周报" },
+    { date: "2026-09-05", precise: true, cat: "gov", level: "national", name: "江苏常州新能源产业专项母基金（50亿）· 省市联合遴选GP（返投1.5倍）", action: "江苏省战略性新兴产业母基金与常州市共同出资设立江苏常州新能源产业专项母基金，总规模50亿元，公开遴选子基金管理机构，返投系数1.5倍，聚焦新能源整车/动力电池/储能/光伏等常州核心赛道", size: "50亿元", fbType: "soft", fbText: "返投常州市内1.5倍", detail: "省市联合战新母基金GP遴选（常州新能源专项）；常州为中国新能源之都（理想/比亚迪/宁德时代生产基地/动力电池产业集群），新能源万亿产业集群龙头城市；省级战新母基金+常州市共同出资50亿，返投系数1.5倍为全省最严格条款之一；聚焦新能源整车/动力电池/储能/光伏/充电基础设施/氢能等常州核心优势赛道；GP遴选为江苏省战新母基金体系9月密集遴选矩阵重要组成；数据源：投中网LP周报（2026-09-05）", industry: "新能源整车、动力电池、储能、光伏、氢能（常州）", url: "#", urlLabel: "投中网LP周报" },
+    { date: "2026-09-08", precise: true, cat: "market", level: "provincial", name: "思瑞浦（688536.SH）· 认购苏州璞华宸光创业投资基金份额（3000万元，元禾璞华系）", action: "上市公司思瑞浦以LP身份认缴3000万元（占2.84%）参与设立苏州璞华宸光创业投资合伙企业（有限合伙），管理人元禾璞华同芯（苏州），专注半导体产业链协同投资，构成关联交易", size: "3000万元（占2.84%）", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（关联交易）；思瑞浦微电子（688536.SH）为A股科创板半导体模拟芯片设计公司，主营信号链/电源管理芯片，应用于工业/通信/汽车电子领域；管理人元禾璞华同芯（苏州）投资管理有限公司为元禾系半导体专业投资机构，专注半导体/集成电路产业链；基金聚焦上市公司同行业及产业链上下游；28家合伙人参与认购；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-08/1225551806.PDF）", industry: "半导体、模拟芯片、集成电路", url: "http://static.cninfo.com.cn/finalpage/2026-09-08/1225551806.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-08", precise: true, cat: "market", level: "national", name: "出版传媒（601999.SH）· 辽宁省数智文化产业投资基金进展（双GP架构确认，总规模约10亿元）", action: "出版传媒公告辽宁省数智文化产业投资基金进展：双GP架构确立（海通创意+辽宁博鸿），投决会5席4票通过制；基金总规模约10亿元（出版传媒出资2.4亿占24%）", size: "约10亿元（出版传媒出资2.4亿，占24%）", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展（投决会架构调整）；出版传媒（601999.SH）为辽宁省国资委旗下A股传媒主体；基金全称：辽宁省数智文化产业投资基金合伙企业（有限合伙）（暂定名）；双GP：海通创意私募基金管理有限公司（派3席投决委员）+ 辽宁博鸿投资（派1席），出版传媒委派1席；投决会5席需4票通过；总规模推算约10亿元（认缴2.4亿占24%，首期实缴4800万）；数智文化赛道聚焦数字出版/AI教育/传媒数字化转型；原始公告：2026-09-03（公告编号2026-035）；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-08/1225550739.PDF）", industry: "数字出版、AI教育、传媒数字化转型（辽宁省）", url: "http://static.cninfo.com.cn/finalpage/2026-09-08/1225550739.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-07", precise: true, cat: "market", level: "provincial", name: "拉卡拉（300773.SZ）· 上海考拉灵犀创业投资基金完成工商注册及中基协备案（SED119）", action: "拉卡拉参与设立的上海考拉灵犀创业投资基金（原名&ldquo;考拉先导人工智能创业投资基金&rdquo;）完成工商注册（2026-07-21）及中基协备案（SED119），正式进入运作阶段，拉卡拉认缴出资1.5亿元", size: "拉卡拉认缴1.5亿元", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（备案落地进展）；拉卡拉支付（300773.SZ）为A股创业板第三方支付龙头，推进&ldquo;AI First&rdquo;战略转型；联合上海国投先导人工智能私募投资基金、北京考拉宏途企业管理中心共同发起，管理人北京考拉昆仑投资管理有限公司（托管：招商银行）；备案编码SED119，成立日2026-07-21；专注人工智能为主的新一代信息技术未上市企业股权/可转债；原始公告：2026-06-26（公告编号2026-024）；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-07/1225551602.PDF）", industry: "人工智能、新一代信息技术、支付科技", url: "http://static.cninfo.com.cn/finalpage/2026-09-07/1225551602.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-05", precise: true, cat: "market", level: "provincial", name: "剑桥科技（603083.SH）· 参与设立投资基金暨与专业投资机构共同投资（进展）", action: "上市公司剑桥科技公告参与设立投资基金暨与专业投资机构共同投资的进展，以LP身份推进基金设立落地", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（进展公告）；剑桥科技（603083.SH）为宽带接入设备/光接入/数据通信网络产品制造商（上交所主板），同时在港交所H股上市（06166.HK）；以LP身份与专业投资机构共同参与设立投资基金，本次为进展公告，同日披露A股及H股镜像公告；聚焦通信网络/光接入/数字基础设施相关产业链；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-05/1225548193.PDF）", industry: "宽带接入、光接入、数据通信网络", url: "http://static.cninfo.com.cn/finalpage/2026-09-05/1225548193.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-05", precise: true, cat: "market", level: "provincial", name: "完美世界（002624.SZ）· 认购基金份额（进展公告）", action: "上市公司完美世界公告认购基金份额的进展，以LP身份推进基金份额认购落地", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（进展公告）；完美世界（002624.SZ）为游戏/影视内容/教育等综合文化娱乐企业（深交所主板），旗下完美世界游戏为国内头部游戏公司；以LP身份认购基金份额，聚焦游戏/数字内容/AI应用/文化科技相关投资；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-05/1225547649.PDF）", industry: "游戏、数字内容、AI文娱", url: "http://static.cninfo.com.cn/finalpage/2026-09-05/1225547649.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-05", precise: true, cat: "market", level: "provincial", name: "好莱客（603898.SH）· 全资子公司认购私募基金份额（进展）", action: "上市公司好莱客全资子公司认购私募基金份额的进展，以LP身份推进基金份额认购", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（进展公告）；好莱客（603898.SH）为定制家居/全屋定制领域上市企业（上交所主板），主营定制家居产品及整体家居解决方案；全资子公司以LP身份认购私募基金份额，聚焦家居产业链/智能制造/消费升级相关赛道；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-05/1225547685.PDF）", industry: "定制家居、全屋定制、智能制造", url: "http://static.cninfo.com.cn/finalpage/2026-09-05/1225547685.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-02", precise: true, cat: "gov", level: "national", name: "江苏泰州大健康先进制造产业专项母基金（10亿）· 公开遴选子基金GP", action: "江苏省战略性新兴产业母基金与泰州市联合出资设立江苏泰州大健康先进制造产业专项母基金（有限合伙），规模10亿元，现公开遴选产业子基金管理机构，聚焦大健康先进制造产业", size: "10亿元", fbType: "soft", fbText: "返投泰州市内", detail: "江苏省战新母基金体系省市联合专项基金GP遴选；江苏泰州大健康先进制造产业专项母基金，总规模10亿元，省级母基金与泰州市共同出资；聚焦高端医疗器械/医药先进制造/健康服务/生命科学等大健康先进制造产业；是泰州&ldquo;大健康+先进制造&rdquo;双赛道矩阵布局（同日另有新材料10亿专项母基金）；系江苏省战新母基金体系省市联合GP遴选矩阵持续扩展；数据源：投资界（2026-09-04，pedaily 202609/568456）", industry: "大健康先进制造（高端医疗器械/医药先进制造/生命科学，泰州）", url: "https://news.pedaily.cn/202609/568456.shtml", urlLabel: "投资界" },
+    { date: "2026-09-01", precise: true, cat: "gov", level: "provincial", name: "宿豫区产业集聚发展基金（10亿）· 完成备案（SANS59）", action: "由宿迁市产业集聚发展基金联合宿豫区国企发起设立的宿豫区产业集聚发展基金（有限合伙）在中基协完成备案（SANS59），正式具备投资条件", size: "10亿元（存续期8年）", fbType: "soft", fbText: "聚焦宿豫区145+X产业布局", detail: "江苏宿豫区产业引导基金备案落地；宿豫区产业集聚发展基金（SANS59）由宿迁市产业集聚发展基金联合宿豫区国企共同发起设立，规模10亿元，存续期8年；将紧紧围绕宿迁市&ldquo;619&rdquo;现代化产业体系建设，重点聚焦宿豫区&ldquo;145+X&rdquo;产业布局，注重区域各板块产业体系集聚发展，重点投向数智经济、新材料、绿色食品、高端装备制造、新能源、宠物经济等特色主导产业；系江苏省宿迁市产业基金矩阵持续完善的重要组成部分；数据源：投资界（2026-09-04，pedaily 202609/568458）", industry: "数智经济、新材料、绿色食品、高端装备制造、新能源、宠物经济（宿豫区）", url: "https://news.pedaily.cn/202609/568458.shtml", urlLabel: "投资界" },
+    { date: "2026-09-01", precise: true, cat: "gov", level: "county", name: "广东晟鹤母基金（鹤山市，5亿）· 完成中基协备案", action: "广东省晟鹤创新股权投资基金合伙企业（有限合伙）在中基协完成登记备案，进入实质性投资运作阶段，总规模5亿元，由金晟丰公司联合鹤山市兴鹤实业共同设立", size: "5亿元", fbType: "soft", fbText: "聚焦鹤山市新质生产力/高端制造", detail: "广东省鹤山市县域母基金备案落地；晟鹤母基金由金晟丰公司发起，联合鹤山市兴鹤实业有限公司共同设立，总规模5亿元；采用&ldquo;子基金+直投&rdquo;方式，精准聚焦新质生产力培育与本地产业升级，对符合鹤山市产业定位及新质生产力定位的科技创新企业、高端制造产业链企业进行投资；鹤山市为广东省重点支持建设的承接产业有序转移主平台，产业基础扎实；数据源：投资界（2026-09-04，pedaily 202609/568452）", industry: "高端制造、新质生产力、科技创新（广东鹤山市）", url: "https://news.pedaily.cn/202609/568452.shtml", urlLabel: "投资界" },
+    { date: "2026-09-02", precise: true, cat: "gov", level: "national", name: "海南自由贸易港建设投资基金 · 拟投海南宝捷会舞启产业发展基金（1.7亿）公示", action: "海南财金银河私募基金管理有限公司发布公示，经征集尽调审议，海南自贸港建设投资基金拟出资不超过5000万元参投海南宝捷会舞启产业发展基金（有限合伙），基金规模1.7亿元，管理人苏州宝捷会股权投资管理中心", size: "1.7亿元（海南自贸港建投基金出资≤5000万）", fbType: "soft", fbText: "聚焦海南自贸港产业", detail: "海南自由贸易港建设投资基金子基金遴选落地公示；海南财金银河私募基金管理有限公司作为海南自贸港建设投资基金的管理人，经征集、申报、尽职调查、审议决策程序选定1只拟投子基金；拟投子基金：海南宝捷会舞启产业发展基金合伙企业（有限合伙，暂定名），基金规模1.7亿元，管理人为苏州宝捷会股权投资管理中心（有限合伙），海南自贸港建设投资基金拟出资不超过5000万元；依《海南自由贸易港建设投资基金管理办法》（琼府办〔2024〕27号）；数据源：投资界（2026-09-04，pedaily 202609/568494）", industry: "海南自贸港产业（具体方向以子基金公告为准）", url: "https://news.pedaily.cn/202609/568494.shtml", urlLabel: "投资界" },
+    { date: "2026-09-04", precise: true, cat: "gov", level: "national", name: "国家中小企业发展基金二期 · 十部委《中小企业发展&ldquo;十五五&rdquo;规划》明确设立", action: "工信部会同国家发改委、科技部、财政部等十部门联合印发《促进中小企业发展&ldquo;十五五&rdquo;规划》，明确设立国家中小企业发展基金二期，带动社会资本投早、投小、投长期、投硬科技", size: "规模待定（国家级FOF二期）", fbType: "none", fbText: "国家级引导基金", detail: "国家级耐心资本政策里程碑；十部委规划明确提出设立国家中小企业发展基金二期，在一期基金（总规模约200亿元）基础上迭代升级，持续发挥&ldquo;母基金引导社会资本&rdquo;杠杆作用；核心逻辑：带动社会资本投早、投小、投长期、投硬科技，聚焦专精特新/科技型中小企业生态培育；基金二期设立将为早期/天使期GP提供重要资金来源；数据源：投资界（2026-09-04，pedaily 202609/568534）", industry: "早期/天使/硬科技/专精特新（国家中小企业发展基金二期体系）", url: "https://news.pedaily.cn/202609/568534.shtml", urlLabel: "投资界" },
+    { date: "2026-09-03", precise: true, cat: "market", level: "provincial", name: "安培龙（深圳安培龙科技股份有限公司）· 与专业投资机构共同投资设立创业投资基金暨关联交易", action: "上市公司安培龙公告与专业投资机构共同投资设立创业投资基金，构成关联交易，以LP身份参与设立", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（关联交易）；深圳安培龙科技股份有限公司为温度传感器/传感器集成模组/电子元器件制造商（深交所创业板）；与专业投资机构共同投资设立创业投资基金，构成关联交易；聚焦传感器/物联网/汽车电子/新能源相关产业链协同赛道；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-03/1225547374.PDF）", industry: "传感器、物联网、汽车电子", url: "http://static.cninfo.com.cn/finalpage/2026-09-03/1225547374.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-03", precise: true, cat: "gov", level: "provincial", name: "湖南省金芙蓉产业引导基金AI产业子基金（10亿）· 完成备案，落户湘江基金小镇", action: "湖南省金芙蓉产业引导基金人工智能产业子基金完成中基协备案，基金目标规模10亿元、首关规模7亿元，落户湘江基金小镇，聚焦AI关键软硬件/核心技术/行业应用", size: "10亿元（首关7亿元）", fbType: "soft", fbText: "聚焦湖南人工智能产业链成群", detail: "省级产业引导基金体系AI专项子基金备案落地；金芙蓉基金为湖南省产业引导基金旗舰品牌，采用&ldquo;1+5+N&rdquo;体系；本只AI产业子基金重点投向人工智能关键软硬件、核心技术研发与行业应用解决方案，兼顾量子科技等前沿领域；目标推动湖南AI产业聚链成群、集群成势；数据源：投资界（2026-09-04，pedaily 202609/568503）", industry: "人工智能（关键软硬件/核心技术/行业应用/量子科技）", url: "https://news.pedaily.cn/202609/568503.shtml", urlLabel: "投资界" },
+    { date: "2026-09-03", precise: true, cat: "gov", level: "national", name: "中建材创业投资基金（苏州）（10亿）· 完成备案，苏州战新央企子基金系列收官", action: "中建材创业投资基金（苏州）合伙企业（有限合伙）完成基金备案，至此苏州战新推进的央企产业子基金（诚通、中电科、中车、中建材）全部正式进入投资运作阶段", size: "10亿元", fbType: "soft", fbText: "聚焦苏州&ldquo;10+10&rdquo;重点产业", detail: "央地联合产业子基金备案落地；中建材创业投资基金注册落地苏州高新区，总规模10亿元，由苏创投-苏州战新高端装备母基金、苏州高新区、中建材体系相关主体、国新基金等多方共同出资设立；管理人中建材私募基金，在管基金总规模超160亿元；系苏州战新央企产业子基金矩阵（诚通/中电科/中车/中建材）全部完成备案的收官之作；数据源：投资界（2026-09-04，pedaily 202609/568497）", industry: "建筑材料、新材料、先进制造（苏州高新区）", url: "https://news.pedaily.cn/202609/568497.shtml", urlLabel: "投资界" },
+    { date: "2026-09-03", precise: true, cat: "market", level: "national", name: "优迅CVC产业基金（3亿）· 完成设立（厦门产投+厦门创投+优迅股份联合）", action: "由厦门产投、厦门创投、优迅股份共同发起设立的厦门优迅产投股权投资基金合伙企业（有限合伙）在火炬高新区完成设立，基金总规模3亿元，聚焦光通信/光电技术/集成电路/AI领域", size: "3亿元", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC（政产联合）产业基金新设；优迅股份（688150.SH）为国内首批光通信前端高速收发芯片设计公司（科创板），致力于AI计算/电信网络/车载光/具身智能，覆盖155Mbps至1.6Tbps速率产品；厦门产投+厦门创投（政府引导资本）联合优迅股份（产业方）三方共同发起设立；聚焦光通信、光电技术、集成电路半导体、人工智能等领域；数据源：投资界（2026-09-04，pedaily 202609/568504）", industry: "光通信、光电技术、集成电路、AI计算（厦门）", url: "https://news.pedaily.cn/202609/568504.shtml", urlLabel: "投资界" },
+    { date: "2026-09-02", precise: true, cat: "gov", level: "national", name: "中金河钢（河北）发展股权投资基金（320亿）· 面向社会遴选子基金管理机构", action: "中金资本与河钢集团共同发起设立中金河钢（河北）发展股权投资基金，基金总规模320亿元人民币，运营期15年，采取&ldquo;母基金+直投&rdquo;运作模式，现面向社会遴选子基金管理机构", size: "320亿元（母基金+直投模式）", fbType: "unk", fbText: "围绕河钢集团产业布局", detail: "央企资本+市场化GP特大规模产业基金GP遴选；中金资本（中金公司旗下PE平台）联合河钢集团（全球最大钢铁企业之一）共同发起；基金总规模320亿元人民币，运营期15年，覆盖河钢集团优势传统产业和战略性新兴产业；围绕钢铁/新材料/绿色低碳/高端装备/氢能等产业链延伸布局；为央企产业基金+市场化GP合作新模式典范之一；数据源：投资界（2026-09-04，pedaily 202609/568425）", industry: "钢铁、新材料、绿色低碳、高端装备、氢能（河钢集团产业链）", url: "https://news.pedaily.cn/202609/568425.shtml", urlLabel: "投资界" },
+    { date: "2026-09-02", precise: true, cat: "market", level: "national", name: "中金上汽贰期新兴产业基金（50亿）· 苏州常熟签约（中金资本+上汽产业资本+常熟国资）", action: "苏州中金上汽贰期新兴产业基金合伙企业（有限合伙）签约仪式在苏州常熟举行，目标认缴规模50亿元，中金资本联合上汽产业资本与常熟地方国资共同设立，是一期基金（已投运）的迭代升级", size: "目标认缴规模50亿元", fbType: "soft", fbText: "聚焦常熟及长三角产业", detail: "市场化产业直投基金新设；中金资本（中金公司旗下PE）+上汽产业资本（上汽集团产业投资平台）+常熟市地方国资联合设立，落地苏州常熟；在一期苏州中金上汽新兴产业股权投资基金良好合作基础上的迭代升级；持续聚焦高端装备、人工智能、半导体等核心赛道，与上汽集团产业布局高度契合；数据源：投资界（2026-09-04，pedaily 202609/568507）", industry: "高端装备、人工智能、半导体（长三角）", url: "https://news.pedaily.cn/202609/568507.shtml", urlLabel: "投资界" },
+    { date: "2026-09-02", precise: true, cat: "gov", level: "provincial", name: "上海宝山国创私募投资基金 · 首只母基金完成备案（SCW650）", action: "宝山国投集团旗下上海宝山国投私募基金管理有限公司发起设立的首只母基金——上海宝山国创私募投资基金合伙企业（有限合伙）正式通过中基协备案（SCW650），进入实质性投资运作阶段", size: "详见备案信息", fbType: "soft", fbText: "聚焦宝山区及上海硬科技", detail: "区级国资母基金备案落地；宝山国投为上海宝山区重点国资科创投资平台；以母子基金联动运作模式，聚焦国家战略方向、上海及宝山区重点产业赛道，坚持投早投小投硬科技；重点投向符合区域产业导向的硬科技领域，带动社会资本集聚宝山；数据源：投资界（2026-09-04，pedaily 202609/568423）", industry: "硬科技、创新孵化（上海宝山区）", url: "https://news.pedaily.cn/202609/568423.shtml", urlLabel: "投资界" },
+    { date: "2026-09-02", precise: true, cat: "gov", level: "national", name: "江苏徐州新兴产业专项母基金（30亿）· 公开遴选GP（更新版，2026-08-31发布）", action: "江苏省战略性新兴产业母基金与徐州市共同出资30亿元设立江苏徐州新兴产业专项母基金，公开遴选产业子基金管理机构，聚焦新能源/集成电路/新材料/绿色环保等战略性新兴产业", size: "30亿元", fbType: "soft", fbText: "返投江苏省内≥70%", detail: "省市联合战新母基金GP遴选；出资结构：省级母基金7.5亿（25%）+徐州市战新母基金7.5亿（25%）+邳州产投2.75亿+睢宁县新城投2.75亿+徐州产发产投基金2.75亿+徐州高新产业基金1.9亿+铜山区创发0.91亿+新沂市智创0.91亿+沛县建元创投0.91亿+徐州工业园区0.91亿+丰县未来产业基金0.91亿+GP徐州战新0.3亿（1%）；子基金规模≥3亿（鼓励≥5亿），注册江苏省内，存续期≤10年；返投：直接投资省内企业≥70%；管理费≤1.5%/年（直投），门槛收益率≥6%；聚焦新能源/集成电路/新材料/绿色环保（徐州&ldquo;343&rdquo;创新产业集群体系）；数据源：投资界（2026-09-02，pedaily 202609/568467）", industry: "新能源、集成电路、新材料、绿色环保（徐州343创新产业集群）", url: "https://news.pedaily.cn/202609/568467.shtml", urlLabel: "投资界" },
+    { date: "2026-09-02", precise: true, cat: "gov", level: "national", name: "江苏徐州智能制造产业专项母基金（30亿）· 公开遴选GP", action: "江苏省战略性新兴产业母基金与徐州市共同出资30亿元设立江苏徐州智能制造产业专项母基金，公开遴选产业子基金管理机构，聚焦智能制造领域", size: "30亿元", fbType: "soft", fbText: "返投江苏省内≥70%", detail: "省市联合战新母基金GP遴选（徐州双基金矩阵之二）；系江苏省战新母基金体系徐州专项同日发布两只子基金GP遴选（新兴产业30亿+智能制造30亿），合计60亿元；聚焦工业机器人/数控机床/智能装备/工业互联网等智能制造领域；子基金要求、返投条件等与新兴产业专项母基金条款一致；数据源：投资界（2026-09-02，pedaily 202609/568459）", industry: "智能制造（工业机器人/数控机床/智能装备/工业互联网）", url: "https://news.pedaily.cn/202609/568459.shtml", urlLabel: "投资界" },
+    { date: "2026-09-02", precise: true, cat: "gov", level: "national", name: "扬州市生物医药产业投资基金（15亿）· 公开遴选子基金GP", action: "扬州市设立总规模15亿元的生物医药产业投资基金，面向社会公开遴选子基金管理机构，聚焦创新药研发/高端医疗器械/智慧医疗", size: "15亿元", fbType: "soft", fbText: "聚焦扬州市生命健康产业集群", detail: "扬州市级政府产业基金GP遴选；生物医药方向专项基金，聚焦扬州市生命健康产业集群相关细分领域：创新药研发/高端医疗器械/智慧医疗等；系江苏省战新母基金体系扬州专项子基金矩阵的重要组成部分（扬州前期已设立航空航天16亿专项母基金）；数据源：投资界（2026-09-04，pedaily 202609/568465）", industry: "创新药、高端医疗器械、智慧医疗（扬州生命健康产业集群）", url: "https://news.pedaily.cn/202609/568465.shtml", urlLabel: "投资界" },
+    { date: "2026-09-01", precise: true, cat: "gov", level: "national", name: "江苏盐城绿色低碳产业专项母基金（20亿）· 公开遴选GP", action: "江苏省战略性新兴产业母基金与盐城市共同出资20亿元设立江苏盐城绿色低碳产业专项母基金，公开遴选产业子基金管理机构，聚焦绿色低碳产业", size: "20亿元", fbType: "soft", fbText: "返投江苏省内≥70%", detail: "省市联合战新母基金GP遴选；盐城为中国风电之都/碳中和领先城市，绿色低碳产业是核心主导产业；聚焦风电/光伏/储能/氢能/新能源汽车/绿色制造等绿色低碳赛道；系江苏省战新母基金体系2026年9月密集GP遴选矩阵的组成部分；数据源：投资界（2026-09-04，pedaily 202609/568536）", industry: "绿色低碳（风电/光伏/储能/氢能/新能源汽车，盐城）", url: "https://news.pedaily.cn/202609/568536.shtml", urlLabel: "投资界" },
+    { date: "2026-09-01", precise: true, cat: "gov", level: "national", name: "江苏南通新一代信息技术产业专项母基金（40亿）· 公开遴选GP", action: "江苏省战略性新兴产业母基金与南通市共同出资40亿元设立江苏南通新一代信息技术产业专项母基金，公开遴选产业子基金管理机构，聚焦新一代信息技术领域", size: "40亿元", fbType: "soft", fbText: "返投江苏省内≥70%", detail: "省市联合战新母基金GP遴选；南通与省级母基金同日发布两只专项子基金（IT40亿+高端装备20亿），合计60亿；新一代信息技术方向聚焦集成电路/半导体/物联网/云计算/5G通信/人工智能应用等赛道；数据源：投资界（2026-09-04，pedaily 202609/568426）", industry: "新一代信息技术（集成电路/物联网/云计算/5G/AI应用，南通）", url: "https://news.pedaily.cn/202609/568426.shtml", urlLabel: "投资界" },
+    { date: "2026-09-01", precise: true, cat: "gov", level: "national", name: "江苏南通高端装备产业专项母基金（20亿）· 公开遴选GP", action: "江苏省战略性新兴产业母基金与南通市共同出资20亿元设立江苏南通高端装备产业专项母基金，公开遴选产业子基金管理机构，聚焦高端装备产业", size: "20亿元", fbType: "soft", fbText: "返投江苏省内≥70%", detail: "省市联合战新母基金GP遴选；南通高端装备方向与新一代IT专项同日发布；聚焦工业机器人/数控系统/高端工程机械/船舶与海工装备/高端医疗设备等南通优势高端装备产业；数据源：投资界（2026-09-04，pedaily 202609/568428）", industry: "高端装备（工业机器人/数控/船舶海工，南通）", url: "https://news.pedaily.cn/202609/568428.shtml", urlLabel: "投资界" },
+    { date: "2026-08-31", precise: true, cat: "market", level: "provincial", name: "厦门金圆科创基金（40亿）· 完成备案，福建（厦门）社保科创基金首只下层基金", action: "厦门金圆科创股权投资合伙企业（有限合伙）成功在中基协完成私募基金备案，注册规模40亿元，系福建（厦门）社保科创基金首只完成备案的下层基金，标志金圆科创基金进入实质性运作阶段", size: "40亿元", fbType: "soft", fbText: "社保长期资本，聚焦福建科创", detail: "省级社保科创基金下层子基金备案落地；厦门金圆科创基金注册规模40亿元，由厦门市创业投资有限公司（厦门金圆投资集团旗下，双执行事务合伙人机制）管理；福建（厦门）社保科创基金为长期耐心资本平台，发挥社保基金长期/耐心资本作用；聚焦电子信息/新能源/新材料/先进制造/高端装备等重点领域；数据源：投资界（2026-09-04，pedaily 202609/568540）", industry: "电子信息、新能源、新材料、先进制造、高端装备（厦门/福建）", url: "https://news.pedaily.cn/202609/568540.shtml", urlLabel: "投资界" },
+    { date: "2026-09-01", precise: true, cat: "gov", level: "provincial", name: "国科东创（沈阳）数智创业投资基金（2亿）· 完成备案（辽宁发展新质生产力母基金+中科院国科创投）", action: "辽宁省发展新质生产力母基金与中科院旗下国科创投以&ldquo;投母返子&rdquo;方式合作设立的首只子基金——国科东创（沈阳）数智创业投资基金，通过中基协备案（SEH187），规模2亿元，投向AI/新一代信息技术/智能制造/新能源新材料等领域科技成果转化项目", size: "2亿元", fbType: "soft", fbText: "聚焦辽宁科技成果转化", detail: "省级新质生产力母基金&ldquo;投母返子&rdquo;合作落地；辽宁省发展新质生产力母基金为辽宁振兴资本生态重要载体；联合中科院旗下国科创投以&ldquo;投母返子&rdquo;方式合作，首只子基金国科东创（沈阳）数智基金正式备案（SEH187）；聚焦AI/新一代信息技术/智能制造/新能源新材料等领域的科技成果转化项目；第二只子基金国科（大连）科技成果转化基金（2亿）将于近期落地；数据源：投资界（2026-09-04，pedaily 202609/568537）", industry: "人工智能、新一代信息技术、智能制造、新能源新材料（辽宁/中科院体系）", url: "https://news.pedaily.cn/202609/568537.shtml", urlLabel: "投资界" },
+    { date: "2026-09-05", precise: true, cat: "market", level: "provincial", name: "中海达（300177.SZ）· 参与设立产业投资基金暨关联交易进展", action: "上市公司中海达公告参与设立产业投资基金暨关联交易进展，持续推进基金设立落地", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展（关联交易）；中海达（300177.SZ）为高精度卫星导航/测量仪器/智能遥感设备国产替代龙头（深交所创业板）；参与设立产业投资基金并构成关联交易，围绕精准定位/导航/遥感/智能装备产业链协同布局；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-05/1225548146.PDF）", industry: "卫星导航、测量仪器、智能遥感", url: "http://static.cninfo.com.cn/finalpage/2026-09-05/1225548146.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-04", precise: true, cat: "market", level: "provincial", name: "华丰科技（688629.SH）· 参与设立产业基金暨关联交易（科创板）", action: "上市公司华丰科技参与设立产业基金暨关联交易，保荐机构出具核查意见", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（关联交易，科创板）；华丰科技（688629.SH）为高端连接器/电子元器件制造商（科创板），产品广泛应用于航空航天/军工/新能源汽车/5G通信；参与设立产业基金并构成关联交易，保荐机构出具专项核查意见；聚焦连接器/高端制造/军工电子产业链；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-04/1225547186.PDF）", industry: "高端连接器、航空航天、军工电子、5G通信", url: "http://static.cninfo.com.cn/finalpage/2026-09-04/1225547186.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-04", precise: true, cat: "market", level: "provincial", name: "市北高新（600604.SH）· 上海东证新静界私募基金完成中基协备案（进展）", action: "市北高新公告参与投资设立的上海东证新静界私募投资基金合伙企业（有限合伙）已完成中基协私募基金备案", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展（备案落地）；市北高新（600604.SH）为上海市北高新技术服务业园区运营商（上交所主板）；上海东证新静界私募投资基金合伙企业（有限合伙）已完成中基协备案，正式进入投资运营阶段；市北高新年内持续布局园区创投生态（已布局新静普/比邻星四期/东证新静界等）；原始出资公告日期：2026-08-28；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-04/1225547029.PDF）", industry: "科技园区、数字经济（园区科创）", url: "http://static.cninfo.com.cn/finalpage/2026-09-04/1225547029.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-03", precise: true, cat: "market", level: "national", name: "出版传媒（601999.SH）· 参与设立数智产业投资基金暨关联交易", action: "上市公司出版传媒以LP出资人身份参与设立数智产业投资基金，构成关联交易", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（关联交易）；出版传媒（601999.SH）为辽宁省国资委旗下A股上市传媒主体（上交所主板），主营图书出版/数字出版/教育服务/传媒内容；参与设立数智产业投资基金并构成关联交易，&ldquo;数智&rdquo;赛道契合数字出版/AI教育/传媒数字化转型协同方向；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-03/1225543942.PDF）", industry: "数字出版、AI教育、传媒数字化转型", url: "http://static.cninfo.com.cn/finalpage/2026-09-03/1225543942.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-03", precise: true, cat: "market", level: "provincial", name: "华西股份（000936.SZ）· 认购合伙企业份额暨关联交易", action: "上市公司华西股份以LP身份认购合伙企业份额，构成关联交易", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（关联交易）；华西股份（000936.SZ）为国有大型建筑施工企业（深交所主板），主营建筑工程/工业安装/市政工程；认购合伙企业份额并构成关联交易，围绕建筑科技/绿色建造/城市更新方向布局；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-03/1225543641.PDF）", industry: "建筑施工、绿色建造、城市更新", url: "http://static.cninfo.com.cn/finalpage/2026-09-03/1225543641.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-02", precise: true, cat: "gov", level: "national", name: "江苏泰州新材料产业专项母基金（10亿）· 公开遴选子基金GP", action: "江苏省战略性新兴产业母基金与泰州市联合出资设立江苏泰州新材料产业专项母基金（有限合伙），规模10亿元，现公开遴选产业子基金管理机构", size: "10亿元", fbType: "soft", fbText: "返投泰州市≥泰州方出资额1倍", detail: "江苏省战新母基金体系省市联合专项基金GP遴选；出资结构：省级母基金2.5亿（25%）+泰州高新产业投资+泰州医药高新区华银金融+东部新城发展集团+泰兴精细化工产业研究院1.5亿+靖江港口集团等多家泰州市属国资；子基金规模不低于3亿元，注册泰州市内，存续期15年；管理费≤1.5%/年，门槛收益率≥年化5%；管理机构要求：认缴规模≥50亿或实缴规模≥30亿，10个IPO/并购退出案例；聚焦先进石化化工新材料/先进钢铁材料/先进有色金属材料；系江苏省战新母基金体系省市联合专项GP遴选矩阵持续扩展（继苏州/扬州/无锡批次）；数据源：投资界（2026-09-02，pedaily 202609/568454）", industry: "新材料（先进石化化工/先进钢铁/先进有色金属——泰州体系）", url: "https://news.pedaily.cn/202609/568454.shtml", urlLabel: "投资界" },
+    { date: "2026-09-01", precise: true, cat: "gov", level: "national", name: "江苏宿迁新材料产业专项母基金（10亿）· 公开遴选子基金GP", action: "江苏省战略性新兴产业母基金与宿迁市联合出资设立江苏宿迁新材料产业专项母基金（有限合伙），规模10亿元，现公开遴选产业子基金管理机构", size: "10亿元", fbType: "soft", fbText: "返投宿迁市≥产业专项母基金实际出资额1倍", detail: "江苏省战新母基金体系省市联合专项基金GP遴选；出资结构：省级母基金2.5亿（25%）+宿迁产业发展集团6.4亿（64%）+宿城区创新投资集团1亿（10%）+宿迁战新基金管理0.1亿（1%）；子基金规模不低于3亿元，注册宿迁市内，存续期15年（投资期8年+退出期7年）；管理费≤1.5%/年，门槛收益率年化5%；管理机构要求：认缴规模≥50亿或实缴规模≥30亿，10个退出案例；返投：直接投资宿迁市内企业金额不低于产业专项母基金实际出资额1倍；公告日2026-08-31，投资界2026-09-02报道；系江苏省战新母基金&ldquo;地市专项子基金&rdquo;密集布局系列之一；数据源：投资界（2026-09-02，pedaily 202609/568457）", industry: "新材料（高性能膜材料/先进有色金属/特种玻璃/高性能纤维——宿迁体系）", url: "https://news.pedaily.cn/202609/568457.shtml", urlLabel: "投资界" },
+    { date: "2026-09-01", precise: true, cat: "market", level: "national", name: "顺丰控股（002352.SZ）· 全资子公司参与投资股权投资基金", action: "顺丰控股公告全资子公司拟参与投资股权投资基金，以LP身份出资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；顺丰控股（002352.SZ）为国内快递物流龙头（深交所主板），主营快递快运/供应链/国际业务；全资子公司拟参与投资股权投资基金，围绕物流科技/供应链/新能源商用车等产业协同方向布局；数据源：证券日报（2026-09-01）", industry: "物流科技、供应链、快递", url: "http://epaper.zqrb.cn/html/2026-09/01/content_1271191.htm", urlLabel: "证券日报" },
+    { date: "2026-09-01", precise: true, cat: "market", level: "provincial", name: "鱼跃医疗（002223.SZ）· 全资子公司参与认购基金份额", action: "鱼跃医疗全资子公司以LP身份认购私募基金份额", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；鱼跃医疗（002223.SZ）为A股医疗器械龙头（深交所主板），主营血糖仪、制氧机、呼吸机等家用医疗器械；全资子公司以LP身份认购私募基金份额，聚焦大健康/医疗产业链协同赛道；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-01/1225538786.PDF）", industry: "医疗器械、大健康", url: "http://static.cninfo.com.cn/finalpage/2026-09-01/1225538786.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-29", precise: true, cat: "market", level: "provincial", name: "穗恒运A（000531.SZ）· 子公司参与设立广州新创恒运国研新能源产业投资基金", action: "穗恒运A子公司参与设立广州新创恒运国研新能源产业投资基金（有限合伙）", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；穗恒运A（000531.SZ）为广州国资委下属热力供应/电力上市企业（深交所主板）；子公司参与设立广州新创恒运国研新能源产业投资基金（有限合伙），联合国研系资本布局新能源产业链协同投资，重点聚焦储能/清洁能源/分布式能源等赛道；巨潮结构化层召回（adjunctUrl: finalpage/2026-08-29/1225527168.PDF）", industry: "新能源、储能", url: "http://static.cninfo.com.cn/finalpage/2026-08-29/1225527168.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-29", precise: true, cat: "market", level: "national", name: "新华网（603888.SH）· 新华网创业投资有限公司认购私募基金份额", action: "新华网全资子公司新华网创业投资有限公司以LP身份认购私募基金份额", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；新华网（603888.SH）为新华社旗下国家级新闻门户上市主体（上交所主板）；全资子公司新华网创业投资有限公司以LP身份认购私募基金份额，聚焦媒体科技/数字内容/人工智能及信创等产业链方向；巨潮结构化层召回（adjunctUrl: finalpage/2026-08-29/1225524856.PDF）", industry: "媒体科技、数字内容、AI/信创", url: "http://static.cninfo.com.cn/finalpage/2026-08-29/1225524856.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-28", precise: true, cat: "market", level: "provincial", name: "市北高新（600604.SH）· 参与投资设立上海东证新静界私募投资基金", action: "市北高新以LP身份参与投资设立上海东证新静界私募投资基金合伙企业（有限合伙）", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；市北高新（600604.SH）为上海市北高新技术服务业园区运营商（上交所主板），主营科技园区开发运营；以LP身份参与投资设立上海东证新静界私募投资基金合伙企业（有限合伙）——东方证券旗下资管产品，聚焦科技创新/数字经济/园区产业链协同方向；巨潮结构化层召回（adjunctUrl: finalpage/2026-08-28/1225518737.PDF）", industry: "科技园区、数字经济", url: "http://static.cninfo.com.cn/finalpage/2026-08-28/1225518737.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-27", precise: true, cat: "market", level: "provincial", name: "巍华新材（603310.SH）· 认购投资基金份额暨与专业投资机构共同投资", action: "巍华新材以LP身份认购投资基金份额并与专业投资机构共同投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；巍华新材（603310.SH）为A股主板上市新材料企业，主营铝合金型材/铝基复合材料等先进金属材料；认购投资基金份额并与专业投资机构共同出资，聚焦新材料/先进制造赛道；巨潮结构化层召回（adjunctUrl: finalpage/2026-08-27/1225508520.PDF）", industry: "新材料、先进制造", url: "http://static.cninfo.com.cn/finalpage/2026-08-27/1225508520.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-27", precise: true, cat: "market", level: "provincial", name: "上海凯鑫（300899.SZ）· 与专业投资机构共同投资认购基金份额", action: "上海凯鑫与专业投资机构共同以LP身份认购基金份额", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；上海凯鑫（300899.SZ）为A股创业板上市公司，主营铝箔/环保包装材料；与专业投资机构共同认购基金份额；巨潮结构化层召回（adjunctUrl: finalpage/2026-08-27/1225512662.PDF）", industry: "环保材料、铝箔包装", url: "http://static.cninfo.com.cn/finalpage/2026-08-27/1225512662.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-27", precise: true, cat: "market", level: "provincial", name: "阳谷华泰（300121.SZ）· 参与认购基金份额暨对外投资", action: "阳谷华泰以LP身份参与认购基金份额进行对外投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；阳谷华泰（300121.SZ）为A股创业板上市公司，主营橡胶助剂/塑料助剂等化工新材料（全球橡胶助剂头部企业）；以LP身份参与认购基金份额进行对外投资；巨潮结构化层召回（adjunctUrl: finalpage/2026-08-27/1225510254.PDF）", industry: "化工新材料、橡胶助剂", url: "http://static.cninfo.com.cn/finalpage/2026-08-27/1225510254.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-26", precise: true, cat: "market", level: "provincial", name: "苏常柴A（000570.SZ）· 子公司参与设立股权投资基金（进展公告）", action: "苏常柴A子公司参与设立股权投资基金暨关联交易（进展公告）", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（进展公告）；苏常柴A（000570.SZ）为A股主板上市公司，主营常柴牌多用途柴油机/汽油机及工程机械动力总成；子公司参与设立股权投资基金暨关联交易（进展公告）；巨潮结构化层召回（adjunctUrl: finalpage/2026-08-26/1225500693.PDF）", industry: "工程机械、内燃机动力", url: "http://static.cninfo.com.cn/finalpage/2026-08-26/1225500693.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-25", precise: true, cat: "gov", level: "county", name: "苏州高铁新城环秀湖产业引导基金 · 1亿元拟投恒鑫江程创业投资（公示2026-08-24至28）", action: "苏州高铁鑫诚私募基金管理有限公司、苏州高铁新城环秀湖产业引导基金拟投子基金恒鑫江程创业投资（苏州）合伙企业（有限合伙），基金规模1.01亿元（可扩募至1.5亿元），公示期2026年8月24日至8月28日", size: "1.01亿元（可扩募至1.5亿元）", fbType: "soft", fbText: "聚焦苏州高铁新城产业", detail: "江苏苏州园区级产业引导基金子基金出资公示；管理人苏州高铁鑫诚私募基金管理有限公司（国控集团旗下）；子基金恒鑫江程创业投资（苏州）合伙企业主要投向硬科技驱动的高成长性行业，重点覆盖半导体与泛半导体、新能源与先进材料、人工智能与数字科技、航空航天与高端制造、新消费与品质生活以及颠覆性前沿技术等领域的未上市成长性/创新性企业；投资期4年，退出期4年；数据源：投资界（2026-08-25，pedaily 202608/568083）", industry: "半导体、新能源、人工智能、航空航天、高端制造（苏州高铁新城）", url: "https://news.pedaily.cn/202608/568083.shtml", urlLabel: "投资界" },
+    { date: "2026-08-25", precise: true, cat: "listed", level: "provincial", name: "华宝新能（301327.SZ）· 全资子公司与专业投资机构共同设立产业基金", action: "上市公司华宝新能公告全资子公司与专业投资机构共同投资设立产业基金，以LP身份参与出资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；华宝新能（301327.SZ）为便携储能/户外电源领域龙头上市公司（深交所创业板），主营便携式储能产品、户外电源及相关配件，具有较强的新能源/消费电子产业链协同背景；全资子公司以LP身份与专业投资机构共同设立产业基金，聚焦储能/新能源/消费电子或产业链协同方向；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-25/1225497960.PDF）", industry: "便携储能、户外电源、新能源消费电子", url: "http://static.cninfo.com.cn/finalpage/2026-08-25/1225497960.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-22", precise: true, cat: "gov", level: "provincial", name: "广东战新引导基金 · 新能源/新材料/医疗器械/创新药/海洋新兴产业5支子基金GP遴选（2026-08-06公告，截止08-31）", action: "广东省战略性新兴产业投资引导基金（首只永续母基金）同日发布5支产业子基金GP遴选公告，覆盖新能源产业、新材料产业、医疗器械产业、创新药产业、海洋新兴产业五大赛道，申报截止2026年8月31日中午12点", size: "各子基金规模待遴选确定", fbType: "unk", fbText: "待遴选明确", detail: "广东省战新引导基金GP遴选矩阵式发布；广东战新引导基金为广东省首只永续母基金，2026年8月6日集中发布5支产业子基金GP遴选公告：(1)新能源产业投资基金——聚焦新型能源体系/新能源关键环节制造；(2)新材料产业投资基金——聚焦电子信息材料/新能源材料/高端金属材料/先进无机非金属材料；(3)医疗器械产业投资基金——聚焦高端创新医疗器械（高值耗材/影像设备/手术机器人等）；(4)创新药产业投资基金——聚焦创新药源头创新/成果转化/产业化；(5)海洋新兴产业投资基金——聚焦海洋高端装备/海洋新材料/海洋电子信息/深海技术；申报截止：2026年8月31日中午12点；管理机构需在国内注册、实缴注册资本≥1000万元、具备中基协登记资格、团队核心成员需5年以上股权投资经验；广东为全国海洋经济第一大省、医疗器械第一大省；系国内省级母基金首次单日集中发布5赛道GP遴选矩阵；数据源：投资界2026-08-06系列报道（pedaily 202608/567318至567328）", industry: "新能源、新材料、高端医疗器械、创新药、海洋新兴产业（广东战新5赛道矩阵）", url: "https://news.pedaily.cn/202608/567328.shtml", urlLabel: "投资界" },
+    { date: "2026-08-21", precise: true, cat: "gov", level: "provincial", name: "长创两山母基金（浙江湖州）· 10亿元完成备案", action: "浙江长誉私募基金管理公司设立的湖州长创两山股权投资合伙企业（有限合伙）已通过中基协私募投资基金备案（SB5854），总规模10亿元", size: "10亿元", fbType: "soft", fbText: "聚焦新质生产力", detail: "浙江省地市级母基金备案落地；由长誉私募、浙江长创股权投资有限公司、安吉县国风产业基金管理有限公司三方共同组建；聚焦新能源汽车、智能制造和材料、信息技术、人工智能、高端制造业等新质生产力领域；采用&ldquo;子基金+项目直投&rdquo;方式布局；数据源：投资界（2026-08-21，pedaily 202608/567899）", industry: "新能源汽车、智能制造、人工智能、高端制造（浙江湖州）", url: "https://news.pedaily.cn/202608/567899.shtml", urlLabel: "投资界" },
+    { date: "2026-08-21", precise: true, cat: "gov", level: "county", name: "江苏源津瑞泓创业投资基金（海门首支链主基金）· 1亿元成立", action: "江苏源津瑞泓创业投资基金成立，基金第一期规模1亿元，由多个产业方共同组建，是海门首支产业链&ldquo;链主基金&rdquo;", size: "1亿元（首期）", fbType: "soft", fbText: "聚焦海门生物医药早期", detail: "江苏县域产业链主基金新设；管理方为上海源津禾润私募基金管理有限公司；专注于生物医药早期投资和孵化，聚焦自身免疫、神经、肾病等创新药物研发；数据源：投资界（2026-08-21，pedaily 202608/567820）", industry: "生物医药早期（自身免疫/神经/肾病，海门）", url: "https://news.pedaily.cn/202608/567820.shtml", urlLabel: "投资界" },
+    { date: "2026-08-19", precise: true, cat: "gov", level: "county", name: "江北新区浦口开发区产业投资基金（3亿）· 公开遴选GP", action: "南京浦口开发区高科技投资有限公司发起设立产业投资基金，公开遴选基金管理人，基金认缴规模不超过3亿元，投向重型装备、新能源、新材料、半导体", size: "≤3亿元", fbType: "soft", fbText: "聚焦浦口开发区产业", detail: "南京江北新区浦口开发区产业基金GP遴选；基金管理机构需募集不少于基金总规模30%的资金；数据源：投资界（2026-08-19，pedaily 202608/567817）", industry: "重型装备、新能源、新材料、半导体（南京浦口）", url: "https://news.pedaily.cn/202608/567817.shtml", urlLabel: "投资界" },
+    { date: "2026-08-18", precise: true, cat: "listed", level: "provincial", name: "环旭电子（601231.SH）· 认购私募基金份额进展", action: "上市公司环旭电子公告认购私募基金份额的进展", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展；环旭电子（601231.SH）为全球领先电子设计制造服务商（ODM/EMS），日月光集团子公司；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-18/1225476368.PDF）", industry: "电子设计制造、SiP封装、通讯类产品", url: "http://static.cninfo.com.cn/finalpage/2026-08-18/1225476368.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-22", precise: true, cat: "listed", level: "provincial", name: "杭氧股份（002430.SZ）· 对外投资设立产业基金暨关联交易进展", action: "上市公司杭氧股份公告对外投资设立产业基金暨关联交易的进展，以LP/出资人身份参与产业基金设立，本次为进展公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展（关联交易）；杭氧股份（002430.SZ）为全球领先工业气体/气体装备制造商，主营空分设备/气体供应/工业气体服务，客户覆盖化工/冶金/电子/医疗；以LP身份参与设立产业基金，构成关联交易；聚焦工业气体/清洁能源/新材料或产业链协同方向；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-22/1225488442.PDF）", industry: "工业气体、气体装备、清洁能源", url: "http://static.cninfo.com.cn/finalpage/2026-08-22/1225488442.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-22", precise: true, cat: "listed", level: "provincial", name: "杭州热电（605011.SH）· 参与设立产业投资基金进展", action: "上市公司杭州热电公告参与设立产业投资基金的进展，以LP/出资人身份参与基金设立，本次为进展公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展；杭州热电（605011.SH）为热电联产/综合能源服务企业（杭州地方国资背景），主营燃气热电联产/蒸汽供应/分布式能源；以LP身份参与设立产业投资基金，聚焦综合能源/清洁能源/绿色低碳或产业链协同方向；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-22/1225488752.PDF）", industry: "热电联产、综合能源、清洁能源", url: "http://static.cninfo.com.cn/finalpage/2026-08-22/1225488752.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-21", precise: true, cat: "listed", level: "national", name: "协鑫能科（全资子公司苏州鑫算）· 1亿元参投上海阶数AI生态基金（10亿/上海国投先导AI参与）", action: "协鑫能科公告全资子公司苏州鑫算产业投资合伙企业以自有资金1亿元参与投资上海阶数创业投资合伙企业（有限合伙），基金认缴出资总额10亿元，上海国投先导AI基金认缴30%", size: "1亿元（占10%，基金总规模10亿元）", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；协鑫能科（002015.SZ）为综合智慧能源/清洁能源运营服务商，近年积极布局能源智算；通过全资子公司苏州鑫算产业投资合伙企业以LP身份出资1亿元，占10%；基金普通合伙人及执行事务合伙人为上海阶数企业管理咨询合伙企业，管理人为上海沄砥私募基金管理有限公司；核心LP含上海国投先导人工智能私募投资基金（认缴30%）、无锡阶跃锡瀛科技（认缴19%）等；基金聚焦AI生态方向；数据源：投资界（2026-08-21，pedaily 202608/567944）", industry: "人工智能、AI生态、综合能源智算", url: "https://news.pedaily.cn/202608/567944.shtml", urlLabel: "投资界" },
+    { date: "2026-08-21", precise: true, cat: "listed", level: "provincial", name: "固高科技（301510.SZ）· 全资子公司对外投资暨关联交易", action: "上市公司固高科技公告全资子公司对外投资暨关联交易，以LP/出资人身份参与股权投资基金，构成关联交易", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（关联交易）；固高科技（301510.SZ）为运动控制/工业自动化/数控系统国产替代领军企业（深交所创业板），产品应用于机器人/3C电子/航空航天/半导体设备等高端制造领域；通过全资子公司以LP身份参与股权投资基金，构成关联交易；聚焦运动控制/工业自动化/智能制造或产业链协同方向；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-21/1225492560.PDF）", industry: "运动控制、工业自动化、数控系统、机器人", url: "http://static.cninfo.com.cn/finalpage/2026-08-21/1225492560.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-21", precise: true, cat: "gov", level: "provincial", name: "陕西汇新白相商业航天创投基金 · 5亿元成立（秦创原+西安创新投+陕国投信托）", action: "陕西汇新白相商业航天创业投资基金合伙企业（有限合伙）正式完成注册，总规模5亿元，由秦创原科技创新投资集团、西安市创新投资基金、陕西省国际信托等共同出资设立，聚焦商业航天赛道", size: "5亿元", fbType: "soft", fbText: "聚焦陕西商业航天/秦创原体系", detail: "省级政府引导基金体系商业航天专项基金新设；出资结构：秦创原科技创新投资集团出资2.4亿元（40%）+西安市创新投资基金出资1.5亿元（30%）+陕国际信托出资9000万元（18%）+西安宸宇智投/长安汇通/同新汇金各出资少量（共12%）；经营范围：创业投资（限投资未上市企业）；体现秦创原科创主体+市级引导基金+上市公司协同格局；配合陕西省商业航天产业布局与西安国家级商业航天发射场建设；数据源：投资界（2026-08-21，pedaily 202608/567945）", industry: "商业航天、卫星互联网、航天技术（陕西/秦创原体系）", url: "https://news.pedaily.cn/202608/567945.shtml", urlLabel: "投资界" },
+    { date: "2026-08-21", precise: true, cat: "gov", level: "provincial", name: "济南市集成电路并购基金 · 公开征集GP（目标规模≤5亿元）", action: "济南市财政投资基金控股集团有限公司公开征集集成电路并购基金合作机构，基金目标规模不超过5亿元，聚焦集成电路/工业机器人/航空航天/先进新材料等赛道上市及非上市企业并购整合", size: "目标规模≤5亿元", fbType: "soft", fbText: "聚焦集成电路/先进制造并购", detail: "济南市级政府产业并购基金GP征集；由济南市财政投资基金控股集团发起，专项开展先进制造业优质企业并购整合；投资标的涵盖集成电路、工业机器人、航空航天、先进新材料等赛道上市及非上市企业；项目投资不受行政区域限制，可全国范围筛选优质并购标的；系国办函[2026]54号新政后省会城市产业并购基金新增载体；数据源：投资界（2026-08-21，pedaily 202608/567897）", industry: "集成电路、工业机器人、航空航天、先进新材料（并购整合）", url: "https://news.pedaily.cn/202608/567897.shtml", urlLabel: "投资界" },
+    { date: "2026-08-20", precise: true, cat: "listed", level: "national", name: "欣旺达（全资子公司欣能科技）· 1亿元参设远致健欣储能资产基金（5亿元，第二支储能基金）", action: "欣旺达公告全资子公司深圳欣能产业发展科技以1亿元参与设立深圳市远致健欣储能资产私募股权基金合伙企业（有限合伙），基金认缴总额5亿元，聚焦储能资产方向", size: "1亿元（占20%，基金总规模5亿元）", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（第二支储能基金）；欣旺达（300750.SZ）为消费/动力/储能电池龙头；本次通过全资子公司欣能科技出资1亿元（20%），与深圳新型储能产业股权基金（1.99亿/39.8%）、深圳天健投资（2亿/40%）、GP远致储能（100万/0.2%）共同设立远致健欣储能资产基金；基金聚焦储能资产方向（区别于此前2026-07-22参设天津开欣储能基金——不同基金）；数据源：投资界（2026-08-21，pedaily 202608/567912）", industry: "储能、新能源产业链", url: "https://news.pedaily.cn/202608/567912.shtml", urlLabel: "投资界" },
+    { date: "2026-08-20", precise: true, cat: "market", level: "national", name: "英矽智能（3696.HK）· 筹设英矽浦发惠理生命科学产业基金（英矽+惠理+浦发集团联合）", action: "英矽智能公告拟与惠理股权投资管理（深圳）有限公司及上海浦东发展（集团）有限公司等共同发起设立英矽浦发惠理（上海）私募股权投资基金合伙企业（有限合伙），聚焦生命科学等领域投资", size: "详见公告", fbType: "none", fbText: "无返投", detail: "AI+生命科学产业基金新设；英矽智能（3696.HK）为全球领先生成式AI驱动的临床阶段生物医药公司（AI药物发现平台）；联合惠理集团境内基金管理主体惠理股权投资管理（深圳）+上海浦发（集团）共同发起设立英矽浦发惠理（上海）私募股权投资基金；依托英矽智能AI赋能生命科学全球技术实力、惠理集团境内外资本服务势能、浦发集团产业载体资源，构建&ldquo;技术+资本+载体&rdquo;产业合作生态；聚焦生命科学/AI医药/生物技术赛道；数据源：投资界（2026-08-20，pedaily 202608/567900）", industry: "生命科学、AI药物发现、生物技术", url: "https://news.pedaily.cn/202608/567900.shtml", urlLabel: "投资界" },
+    { date: "2026-08-19", precise: true, cat: "gov", level: "national", name: "江苏省战新母基金 · 17只产业子基金集中签约185.45亿元（8月19日南京推介会）", action: "江苏省战略性新兴产业母基金产业子基金管理机构推介会在南京举行，17只产业子基金集中签约，总规模185.45亿元；名单含苏州战新母基金、毅达资本、昆仑资本、南京战新母基金、中信聚信、金浦投资、国元股权、元禾重元、无锡战新母基金等", size: "17只子基金，合计规模185.45亿元", fbType: "soft", fbText: "覆盖江苏13个设区市/省属企业/央企", detail: "江苏省级母基金GP遴选落地里程碑；至此省战新母基金已先后设立产业专项基金47只、总规模1860亿元，覆盖江苏13个设区市、7家省属企业、1家央企、1只国家级大基金；本批17只新签约子基金含多家头部机构与省级国资联合出资结构；系国内战新母基金体系中规模最大、覆盖最广的单次推介会签约规模之一；配合江苏省新质生产力与战略性新兴产业布局；数据源：投资界（2026-08-21，pedaily 202608/567879）", industry: "战略性新兴产业（江苏13设区市全覆盖）", url: "https://news.pedaily.cn/202608/567879.shtml", urlLabel: "投资界" },
+    { date: "2026-08-19", precise: true, cat: "market", level: "national", name: "浙江社保科创基金 · 新一批6支子基金集中签约，累计8支总规模276亿元", action: "浙江社保科创基金新一批子基金集中签约仪式在杭州举行，经纬创投、鼎晖投资、英诺科创、华控基金、东方嘉富、容亿投资等6支子基金进行集中签约，连同此前已签约2支，累计8支总规模276亿元", size: "本批6支，累计8支总规模276亿元", fbType: "soft", fbText: "长周期社保资金，助力科创浙江", detail: "浙江社保科创基金子基金遴选落地；浙江社保科创基金为省级社保体系旗下长期资本平台，以&ldquo;长周期、稳投入&rdquo;为特质；本批入选机构含经纬创投（早期科技）、鼎晖投资（成长/并购）、英诺科创（早期创新）、华控基金（先进制造）、东方嘉富、容亿投资；覆盖医疗健康/硬科技/人工智能/先进制造等多赛道；累计8支子基金总规模276亿元，另有5支拟投子基金进行意向签约；系浙江省长线资本向优质市场化GP持续输出的标志性进展；数据源：投资界（2026-08-21，pedaily 202608/567859）", industry: "硬科技、医疗健康、人工智能、先进制造（浙江社保科创布局）", url: "https://news.pedaily.cn/202608/567859.shtml", urlLabel: "投资界" },
+    { date: "2026-08-21", precise: true, cat: "listed", level: "provincial", name: "达瑞电子（300976.SZ）· 全资子公司参与认购投资基金份额", action: "达瑞电子公告全资子公司参与认购投资基金份额，以LP身份出资，具体基金名称及出资规模详见公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；达瑞电子（300976.SZ）为精密光学元器件/高功率光学/光电子器件制造商（深交所创业板）；全资子公司以LP身份参与认购投资基金份额，布局光电子/半导体/先进制造相关产业链协同方向；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-21/1225486383.PDF）", industry: "光电子、精密光学、半导体器件", url: "http://static.cninfo.com.cn/finalpage/2026-08-21/1225486383.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-19", precise: true, cat: "gov", level: "provincial", name: "临平区产业发展基金 · 公开遴选专项子基金管理机构", action: "杭州市临平区产业发展基金启动专项子基金管理机构市场化公开遴选，聚焦高端装备、生命健康、绿色能源、新材料、硬科技、时尚消费等主导产业与未来产业关键赛道", size: "基金规模详见公告", fbType: "soft", fbText: "投资进度须≥70%（已合作GP）", detail: "杭州市临平区产业发展基金；依据《国办函〔2026〕54号》及《临平区&ldquo;3+5+N&rdquo;产业基金管理办法》；聚焦高端装备、生命健康、绿色能源、新材料、硬科技、时尚消费6大赛道；已有合作基金管理机构参与遴选者，原有基金投资进度须达批复规模70%以上；业绩统计截止2026年6月30日；2026年8月19日发布", industry: "高端装备、生命健康、绿色能源、新材料、硬科技", url: "https://news.pedaily.cn/202608/567860.shtml", urlLabel: "投资界" },
+    { date: "2026-08-20", precise: true, cat: "listed", level: "provincial", name: "捷成股份（300182.SZ）· 与专业投资机构共同投资设立产业基金", action: "捷成股份公告拟与专业投资机构共同投资设立产业基金，以有限合伙人（LP）身份参与新设产业基金设立，并同日披露全资子公司增资扩股引入产业基金暨关联交易公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；捷成股份（300182.SZ）为数字内容服务/影视版权运营/数字媒体技术服务商，主营数字内容全产业链服务；以LP身份与专业投资机构共同投资设立产业基金，同日另披露子公司增资扩股引入产业基金暨关联交易（为被投资方吸引产业基金入股）；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-20/1225484702.PDF）", industry: "数字内容、影视版权、数字媒体服务", url: "http://static.cninfo.com.cn/finalpage/2026-08-20/1225484702.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-20", precise: true, cat: "listed", level: "national", name: "云赛智联（600602.SH）· 参与出资设立上海仪电智算产业生态基金（完成备案）", action: "云赛智联公告参与出资设立上海仪电智算产业生态基金的进展暨完成基金备案，以LP身份出资参与上海仪电集团体系下智算产业生态基金", size: "详见公告", fbType: "soft", fbText: "聚焦上海仪电智算产业生态", detail: "上市公司CVC出资（国资体系）；云赛智联（600602.SH）为上海仪电集团旗下智慧城市/IT服务/物联网/数字化转型上市平台（上交所主板）；参与出资设立上海仪电智算产业生态基金，基金已完成中基协备案，聚焦智算基础设施/AI+应用/数字经济产业生态建设；体现上海国资体系围绕算力/AI加速布局；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-20/1225481833.PDF）", industry: "智算、AI算力、数字经济（上海仪电体系）", url: "http://static.cninfo.com.cn/finalpage/2026-08-20/1225481833.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-20", precise: true, cat: "listed", level: "provincial", name: "道生天合（601026.SH）· 参与认购基金份额暨对外投资", action: "道生天合公告参与认购私募基金份额暨对外投资，以LP身份认购出资，具体基金名称及出资规模详见公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；道生天合（601026.SH）为聚氨酯原材料/改性聚氨酯弹性体/特种聚氨酯专业供应商（上交所主板），主要客户覆盖汽车/电子/建筑/风电叶片等领域；以LP身份认购私募基金份额，围绕高分子新材料/化工新材料/绿色制造相关产业链协同方向布局；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-20/1225482842.PDF）", industry: "聚氨酯、特种化工、新材料", url: "http://static.cninfo.com.cn/finalpage/2026-08-20/1225482842.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-19", precise: true, cat: "gov", level: "national", name: "四川省成果转化投资引导基金（50亿）· 公开遴选第五批子基金GP（截止2026-09-08）", action: "四川省成果转化投资引导基金公开遴选第五批子基金管理机构，子基金类型涵盖创投期（≥5亿）、天使期（≥3亿）、种子期（≥1亿）、量子科技子基金、氢能和聚变能子基金，招标文件自2026年8月19日至9月7日获取，投标截止2026年9月8日", size: "母基金总规模50亿元", fbType: "soft", fbText: "出资≤10%不限注册地/四川注册不设返投", detail: "四川省级政府引导基金GP遴选；成果转化基金总规模50亿元，聚焦&ldquo;投早、投小、投硬科技&rdquo;；第五批子基金五类：创投期（规模≥5亿，70%投创投期科技企业）、天使期（规模≥3亿，70%投天使期）、种子期（规模≥1亿，70%投种子期）、量子科技子基金（70%投量子科技及融合应用）、氢能和聚变能双能子基金（70%投氢能+聚变能领域）；母基金出资比例≤40%；不超10%则不限注册地且四川省内注册原则上不设返投；管理人实缴注册资本≥1000万元，累计管理基金实缴规模≥5亿元；特殊子基金（量子/双能）要求有链主/产业龙头参与；招标代理：中信建投资本；数据源：投资界（2026-08-19，pedaily 202608/567861）", industry: "前沿科技/未来产业（量子科技、氢能、聚变能、硬科技早期）", url: "https://news.pedaily.cn/202608/567861.shtml", urlLabel: "投资界" },
+    { date: "2026-08-19", precise: true, cat: "listed", level: "provincial", name: "诚志股份（000990.SZ）· 子公司诚志创新参与设立青岛鼎荣新兴私募股权基金（进展公告）", action: "上市公司诚志股份公告子公司诚志创新参与设立青岛鼎荣新兴私募股权基金的进展，推进基金设立落地", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展；诚志股份（000990.SZ）为清华控股旗下化工新材料/精细化工/电子化学品/生物基材料综合性平台（深交所主板），聚焦高端化工产业链；通过子公司诚志创新以LP身份参与青岛鼎荣新兴私募股权基金设立，围绕化工新材料/高端制造/科技创新产业协同布局；本次为进展公告；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-19/1225478998.PDF）", industry: "化工新材料、电子化学品、精细化工（清华控股体系）", url: "http://static.cninfo.com.cn/finalpage/2026-08-19/1225478998.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-18", precise: true, cat: "listed", level: "provincial", name: "天健集团（000090.SZ）· 全资子公司参与设立股权投资基金暨关联交易（进展公告）", action: "上市公司天健集团公告全资子公司参与设立股权投资基金暨关联交易的进展，推进基金设立落地", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展（关联交易）；天健集团（000090.SZ）为深圳国资委控股建筑/房地产/工程建设综合性企业（深交所主板），主营建筑施工、房地产开发、工程管理；通过全资子公司以LP身份参与股权投资基金设立，构成关联交易，聚焦建筑科技/绿色建筑/城市更新或产业链协同方向；本次为进展公告；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-18/1225476687.PDF）", industry: "建筑施工、房地产、城市更新（深圳国资体系）", url: "http://static.cninfo.com.cn/finalpage/2026-08-18/1225476687.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-14", precise: true, cat: "listed", level: "provincial", name: "华鹏飞（300350.SZ）· 参与投资设立股权投资合伙企业暨关联交易（进展公告）", action: "上市公司华鹏飞公告参与投资设立股权投资合伙企业暨关联交易的进展，以LP身份参与，本次为进展公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展（关联交易）；华鹏飞（300350.SZ）为液化石油气（LPG）储运、分销及终端销售服务商，同时布局天然气/清洁能源供应链；以LP身份参与设立股权投资合伙企业，构成关联交易，围绕能源化工/清洁能源/产业链协同方向布局；本次为进展公告；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-14/1225473517.PDF）", industry: "液化石油气（LPG）、天然气、清洁能源供应链", url: "http://static.cninfo.com.cn/finalpage/2026-08-14/1225473517.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-18", precise: true, cat: "listed", level: "provincial", name: "豪美新材（002988.SZ）· 出资1亿元参与设立中芯熙诚（四川）AI创业投资基金（总规模10亿元）", action: "豪美新材公告拟与扬州芯熙成城等共同投资设立中芯熙诚（四川）人工智能创业投资基金合伙企业（有限合伙），目标募集总额10亿元，公司作为有限合伙人认缴出资1亿元", size: "1亿元（约占10%，基金总规模10亿元）", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；豪美新材（002988.SZ）为铝合金型材/建筑幕墙/新型节能建材企业（广东）；以有限合伙人身份出资1亿元，参与投资设立中芯熙诚（四川）人工智能创业投资基金合伙企业（有限合伙），基金目标募集总额10亿元，GP为扬州芯熙成城管理咨询合伙企业（有限合伙），四川注册；基金聚焦AI赛道；数据源：中财网（2026-08-17，cfi p20260817002675）+ 巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-18/1225477686.PDF）", industry: "人工智能（AI赛道）", url: "http://static.cninfo.com.cn/finalpage/2026-08-18/1225477686.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-18", precise: true, cat: "listed", level: "national", name: "复旦微电（688385.SH）· 参与设立产业基金暨关联交易（科创板半导体）", action: "上市公司复旦微电公告参与设立产业基金暨关联交易，以LP身份参与，构成关联交易，具体基金名称及出资规模详见公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（关联交易）；复旦微电（688385.SH）为科创板半导体芯片设计公司（FPGA/CPLD/MCU/安全芯片/模拟电路），为国内大规模可编程逻辑器件龙头；以LP身份参与设立产业基金，构成关联交易（关联方参与基金LP/GP结构）；可能聚焦国产替代/半导体/集成电路产业链相关赛道；同日同时披露两份公告（A股+H股镜像）；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-18/1225478266.PDF）", industry: "半导体、FPGA、MCU、安全芯片、国产替代", url: "http://static.cninfo.com.cn/finalpage/2026-08-18/1225478266.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-17", precise: true, cat: "listed", level: "provincial", name: "翰博高新（301321.SZ）· 与专业投资机构共同投资产业基金（第三笔）", action: "上市公司翰博高新公告与专业投资机构共同投资产业基金，以LP身份参与新设产业基金，为继2026-07-17（青岛精确科启）、2026-08-07之后第三笔CVC出资公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（第三笔）；翰博高新（301321.SZ）为光电显示材料（光学膜/背光模组等）企业；此前已有2026-07-17参投青岛精确科启基金（第一笔）和2026-08-07参投产业基金（第二笔）；本次第三笔以LP身份参与专业投资机构发起的新设产业基金；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-17/1225476396.PDF）", industry: "光电显示材料、光学薄膜、背光模组", url: "http://static.cninfo.com.cn/finalpage/2026-08-17/1225476396.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-17", precise: true, cat: "listed", level: "provincial", name: "奥飞数据（300738.SZ）· 参与投资设立产业投资基金", action: "上市公司奥飞数据公告参与投资设立产业投资基金，以LP出资人身份参与基金设立，具体规模及基金名称详见公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；奥飞数据（300738.SZ）为IDC数据中心/边缘计算/高性能网络服务商（深交所创业板）；以LP身份参与投资设立产业投资基金，聚焦数字基础设施/算力/AI或相关产业链协同方向布局；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-17/1225478014.PDF）", industry: "数据中心（IDC）、边缘计算、算力基础设施", url: "http://static.cninfo.com.cn/finalpage/2026-08-17/1225478014.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-17", precise: true, cat: "listed", level: "county", name: "开创电气（301448.SZ）· 参与发起设立金华婺城灵创机器人产业基金（出资1500万/15%）", action: "开创电气与婺城区政府、金华市创新投资集团等七方签署合作框架协议，拟共同发起设立金华婺城灵创机器人产业投资合伙企业（有限合伙），总规模1亿元，公司拟出资1500万元（15%）", size: "1500万元（15%，基金总规模1亿元）", fbType: "soft", fbText: "聚焦婺城区具身智能/关节模组", detail: "上市公司CVC出资（产业基金联合发起）；开创电气（301448.SZ）为高压电气设备/开关柜制造商，近年布局燕谷机器人/具身智能；联合婺城区人民政府+金华市创新投资集团+金华市城市发展集团+灵心巧手（北京）+云锦（苏州）资本+自然人王卓然+高婷共七方，暂定名金华婺城灵创机器人产业投资合伙企业（有限合伙）；基金总规模1亿元，公司出资1500万元（15%）；优先投向具身智能/核心关节模组/智能装备及上下游，重点支持婺城区内落地项目；数据源：东方财富（2026-08-17）", industry: "机器人、具身智能、核心关节模组（金华婺城区）", url: "https://finance.eastmoney.com/a/202608173843383132.html", urlLabel: "东方财富" },
+    { date: "2026-08-14", precise: true, cat: "gov", level: "provincial", name: "台州路桥金浦母基金（20.02亿）· 公开征集AI子基金管理人", action: "台州路桥金浦盛源创鑫股权投资合伙企业（有限合伙）发布公开征集AI子基金管理人公告，围绕路桥区&ldquo;4+2+4&rdquo;产业布局，聚焦人工智能领域开展子基金布局", size: "20.02亿元（母基金规模）", fbType: "soft", fbText: "聚焦台州路桥产业（含新能源/机器人/泛半导体）", detail: "浙江省地市级政府母基金GP遴选；台州路桥金浦盛源创鑫股权投资合伙企业（有限合伙），成立于2026年3月10日，总规模20.02亿元；贯彻落实国家&ldquo;人工智能+&rdquo;战略及浙江省数字化转型实施方案，拟围绕AI领域开展子基金布局；本阶段不设硬性量化指标（基金规模/出资比例/门槛收益率等），具体合作条件在后续正式遴选中明确；服务路桥区&ldquo;4+2+4&rdquo;产业布局（汽车及零部件/机电/再生金属/摩托车+塑料模具/智能卫浴+新能源/高端装备/机器人/泛半导体）；数据源：投资界（2026-08-14，pedaily 202608/567700）", industry: "人工智能、新能源、机器人、泛半导体（台州路桥区）", url: "https://news.pedaily.cn/202608/567700.shtml", urlLabel: "投资界" },
+    { date: "2026-08-13", precise: true, cat: "gov", level: "county", name: "巴中市产业发展引导基金 · 公开遴选电子元器件子基金GP（截止2026-08-27）", action: "巴中市产业发展引导基金正式启动电子元器件子基金管理机构遴选，面向社会公开遴选，按公开透明、竞争择优原则，申报截止2026年8月27日18:00", size: "母基金规模10亿元（2026-03备案）", fbType: "soft", fbText: "聚焦巴中市5+2+3产业体系", detail: "四川巴中市县域引导基金GP遴选；巴中市产业发展引导基金已于2026年3月完成备案，由巴中兴财私募基金管理有限公司担任管理人，重点围绕巴中市&ldquo;5+2+3&rdquo;产业体系开展投资运作；本次公开遴选电子元器件子基金管理机构，纸质材料提交至四川省巴中市江北大道西段74号三楼；申报截止：2026年8月27日18:00；数据源：新浪科技（2026-08-13，sina doc-ininecsu0017022）", industry: "电子元器件（巴中市）", url: "https://finance.sina.com.cn/tech/roll/2026-08-13/doc-ininecsu0017022.shtml", urlLabel: "新浪科技" },
+    { date: "2026-08-12", precise: true, cat: "gov", level: "national", name: "上海国投先导人工智能母基金 · 拟参投6只子基金（公示）", action: "上海国投先导基金公示，经遴选程序，上海国投先导人工智能母基金拟参与投资6只子基金：中科创星、基石资本、五源资本、云启资本、厚雪资本、浦耀信晔，公示期5个工作日", size: "母基金出资规模详见各子基金协议", fbType: "none", fbText: "人工智能方向", detail: "上海三大先导产业母基金子基金遴选落地（AI方向）；经遴选程序，6家机构入选：中科创星（硬科技早期投资）、基石资本（综合股权投资）、五源资本（早期科技/AI）、云启资本（企业服务/云计算/AI应用）、厚雪资本、浦耀信晔；覆盖AI大模型/具身智能/企业服务/算力等多细分赛道；上海三大先导产业母基金总规模逾890亿元（AI母基金225.01亿），2026年3月起转为常态化遴选机制；8月内三大先导母基金合计出资13家子基金（12天内）；数据源：证券时报（2026-08-14，stcn article/detail/4078648）+ 投资界（2026-08-14，pedaily 202608/567706）", industry: "人工智能、大模型、具身智能、企业服务、算力", url: "https://www.stcn.com/article/detail/4078648.html", urlLabel: "证券时报" },
+    { date: "2026-08-14", precise: true, cat: "listed", level: "provincial", name: "二六三（002467.SZ）· 参与投资设立投资基金进展暨签署补充协议", action: "上市公司二六三公告参与投资设立投资基金的进展，并已签署补充协议，推进基金设立落地", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展；二六三（002467.SZ）为企业云通信/统一通信服务商（云通信、视频会议、呼叫中心等）；以LP身份参与投资设立基金，本次为进展公告（签署补充协议），推进基金落地；具体基金全称及出资规模以公告原文为准；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-14/1225471125.PDF）", industry: "企业通信、云通信、统一通信", url: "http://static.cninfo.com.cn/finalpage/2026-08-14/1225471125.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-11", precise: true, cat: "listed", level: "county", name: "佳力奇（301586.SZ）· 参与认购宿州市高新区新动能创业投资基金份额（进展）", action: "上市公司佳力奇公告参与认购宿州市高新区新动能创业投资合伙企业（有限合伙）基金份额进展，以LP身份出资，推进基金设立与认购", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展；佳力奇（301586.SZ）为航空航天精密结构件/复合材料制造商（总部宿州）；认购宿州市高新区新动能创业投资合伙企业（有限合伙）基金份额，围绕航空航天/高端制造/新动能产业链布局，同时支持公司总部所在地宿州市高新区产业生态建设；具体出资规模及基金全名以公告原文为准；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-11/1225468794.PDF）", industry: "航空航天精密制造、复合材料", url: "http://static.cninfo.com.cn/finalpage/2026-08-11/1225468794.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-12", precise: true, cat: "listed", level: "provincial", name: "宁德时代（300750.SZ）· 参与投资海南时代绿色产业投资基金", action: "宁德时代公告参与投资海南时代绿色产业投资基金合伙企业（有限合伙），以LP身份出资参与，聚焦绿色产业/新能源投资布局", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；宁德时代（300750.SZ）为全球最大动力锂电池及储能电池制造商（CATL），以LP身份参与设立海南时代绿色产业投资基金合伙企业（有限合伙），聚焦绿色产业/储能/新能源产业链相关投资；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-12/1225470687.PDF）", industry: "绿色产业、新能源、储能、锂电", url: "http://static.cninfo.com.cn/finalpage/2026-08-12/1225470687.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-11", precise: true, cat: "listed", level: "national", name: "兆易创新（603986.SH）· 出资1亿美元认购云锋基金25%份额", action: "兆易创新通过全资子公司芯技佳易微电子（香港）出资1亿美元（约6.79亿元），认购Yunfeng Investment V, L.P.（云锋基金）25%基金份额；基金总规模4亿美元，聚焦亚洲境内外科技及相关服务公司投资", size: "1亿美元（约6.79亿元人民币）", fbType: "soft", fbText: "CVC/境外基金", detail: "上市公司CVC出资（境外基金）；兆易创新（603986.SH）为国内领先存储芯片（NOR Flash/NAND/DRAM）及MCU设计商；通过HK全资子公司芯技佳易微电子（香港）科技有限公司出资1亿美元，认购Yunfeng Investment V, L.P.（云锋基金）25%份额，基金总规模4亿美元，最终投资对象聚焦亚洲境内及境外科技及相关服务公司；数据源：巨潮资讯（adjunctUrl: finalpage/2026-08-11/1225466333.PDF）+ 投资界2026-08-12报道（pedaily 567581）", industry: "半导体、存储芯片、MCU（境外科技基金）", url: "http://static.cninfo.com.cn/finalpage/2026-08-11/1225466333.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-11", precise: true, cat: "gov", level: "national", name: "诚通苏实（苏州）科技成果转化创业投资基金 · 10亿元完成备案", action: "诚通苏实（苏州）科技成果转化创业投资基金合伙企业（有限合伙）完成中基协备案，总规模10亿元，由诚通科创联合苏州高端装备产业专项母基金、苏州工业园区二期产业投资基金共同发起设立，正式进入投资运营阶段", size: "基金规模10亿元", fbType: "soft", fbText: "央地联合/苏州科创", detail: "央地联合基金备案落地；LP结构：诚通科创体系出资5.5亿元 + 苏州地方国资及专业资本4.5亿元；聚焦新材料及配套科学仪器、AI信息技术、战略性新兴产业与未来产业赛道；围绕苏州实验室源头创新项目重点布局种子期/初创期企业；诚通科创体系在长三角布局的苏州专项科技成果转化基金；数据源：投资界2026-08-11（pedaily 202608/567520）", industry: "新材料、AI信息技术、战略性新兴产业（苏州/长三角）", url: "https://news.pedaily.cn/202608/567520.shtml", urlLabel: "投资界" },
+    { date: "2026-08-11", precise: true, cat: "listed", level: "provincial", name: "奥特维（688516.SH）· 参与投资设立产业基金暨签订合伙协议", action: "上市公司奥特维公告参与投资设立产业基金暨签订合伙协议，以LP/出资人身份参与产业基金设立并完成合伙协议签署", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC新设参与；奥特维（688516.SH）为光伏/半导体硅片及新能源电池设备核心制造商，光伏串焊机及硅片切割设备领域全球领先；以LP身份参与设立产业基金并完成合伙协议签署，聚焦光伏/半导体设备产业链或战略协同赛道；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-11/1225466720.PDF）", industry: "光伏设备、半导体设备、新能源电池", url: "http://static.cninfo.com.cn/finalpage/2026-08-11/1225466720.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-12", precise: true, cat: "listed", level: "provincial", name: "完美世界（002624.SZ）· 认购投资基金份额", action: "上市公司完美世界公告认购投资基金份额，以LP身份出资认购，具体基金名称及出资规模详见公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；完美世界（002624.SZ）为网络游戏/影视/教育业务综合型互联网企业（代表游戏：神雕侠侣、完美世界等）；以LP身份认购投资基金份额，聚焦数字娱乐/科技或产业协同方向布局；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-12/1225469173.PDF）", industry: "游戏、影视、数字娱乐", url: "http://static.cninfo.com.cn/finalpage/2026-08-12/1225469173.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-12", precise: true, cat: "listed", level: "provincial", name: "亚太药业（002370.SZ）· 全资子公司参与认购投资基金份额", action: "上市公司亚太药业公告全资子公司参与认购投资基金份额，以LP身份认购出资，具体基金名称及出资规模详见公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；亚太药业（002370.SZ）为原料药/化学制剂/健康消费品综合性制药企业；通过全资子公司以LP身份认购投资基金份额，聚焦医药大健康/精准医疗或产业协同方向；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-12/1225468886.PDF）", industry: "原料药、化学制剂、医疗健康", url: "http://static.cninfo.com.cn/finalpage/2026-08-12/1225468886.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-12", precise: true, cat: "listed", level: "provincial", name: "好莱客（603898.SH）· 全资子公司认购私募基金份额", action: "上市公司好莱客公告全资子公司认购私募基金份额，以LP身份认购出资，具体基金名称及出资规模详见公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；好莱客（603898.SH）为定制家居/全屋定制解决方案领域龙头企业（广州）；通过全资子公司以LP身份认购私募基金份额，聚焦家居建材/新型居住方式或消费科技产业协同方向；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-12/1225467922.PDF）", industry: "定制家居、全屋定制、消费建材", url: "http://static.cninfo.com.cn/finalpage/2026-08-12/1225467922.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-11", precise: true, cat: "listed", level: "provincial", name: "中曼石油（603619.SH）· 认购私募基金份额", action: "上市公司中曼石油公告认购私募基金份额，以LP身份出资认购，具体基金名称及出资规模详见公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；中曼石油（603619.SH）为油气钻井工程服务/石油装备领域企业；以LP身份认购私募基金份额，聚焦油气开发/能源产业链或新能源转型相关赛道；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-11/1225465537.PDF）", industry: "油气钻井、石油装备、能源", url: "http://static.cninfo.com.cn/finalpage/2026-08-11/1225465537.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-12", precise: true, cat: "listed", level: "provincial", name: "神驰机电（603109.SH）· 与私募基金合作投资事项进展公告", action: "上市公司神驰机电公告与私募基金合作投资事项进展，以LP/出资人身份参与私募基金合作投资，本次为进展公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展；神驰机电（603109.SH）为通用动力/汽油发动机及户外动力设备制造商；与私募基金开展合作投资，聚焦通用动力/清洁能源设备或产业协同赛道；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-12/1225467758.PDF）", industry: "通用动力、汽油发动机、户外动力设备", url: "http://static.cninfo.com.cn/finalpage/2026-08-12/1225467758.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-12", precise: true, cat: "listed", level: "provincial", name: "沪光股份（605333.SH）· 参与设立产业投资基金进展公告", action: "上市公司沪光股份公告参与设立产业投资基金进展，以LP/出资人身份参与产业基金设立，本次为进展公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展；沪光股份（605333.SH）为汽车高压线束/新能源车载线束核心供应商；参与设立产业投资基金，聚焦新能源汽车/汽车智能化/高压线束产业链相关赛道；巨潮资讯结构化披露层召回（adjunctUrl: finalpage/2026-08-12/1225468094.PDF）", industry: "汽车线束、新能源汽车、汽车智能化", url: "http://static.cninfo.com.cn/finalpage/2026-08-12/1225468094.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-08", precise: true, cat: "listed", level: "provincial", name: "内蒙古伊泰煤炭（900948.SH）· 投资私募基金（能源转型方向）", action: "上市公司内蒙古伊泰煤炭公告投资私募基金，以LP出资人身份参与私募基金投资，围绕公司能源转型主业方向布局", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；内蒙古伊泰煤炭（900948.SH）为内蒙古最大民营煤炭企业之一，近年积极向煤化工/新能源/新材料转型；以LP身份投资私募基金，围绕能源转型/煤化工/绿色低碳方向布局；系巨潮资讯结构化披露层召回（2026-08-08披露，adjunctUrl路径finalpage/2026-08-08/1225464906.PDF确认）", industry: "煤炭、煤化工、能源转型", url: "http://static.cninfo.com.cn/finalpage/2026-08-08/1225464906.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-08", precise: true, cat: "listed", level: "provincial", name: "粤海饲料（001313.SZ）· 参与认购私募基金份额暨与专业投资机构合作投资", action: "上市公司粤海饲料公告参与认购私募基金份额暨与专业投资机构合作投资，以LP身份出资认购", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；粤海饲料（001313.SZ）为水产饲料/畜禽饲料生产龙头企业；认购私募基金份额并与专业投资机构开展合作投资，围绕大农业/水产/动物营养产业链布局；系巨潮资讯结构化披露层召回（2026-08-08披露，adjunctUrl路径finalpage/2026-08-08/1225465045.PDF确认）", industry: "水产饲料、畜禽饲料、大农业", url: "http://static.cninfo.com.cn/finalpage/2026-08-08/1225465045.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-07", precise: true, cat: "gov", level: "national", name: "江苏扬州航空航天产业专项母基金（16亿）· 公开遴选产业子基金GP", action: "江苏省战略性新兴产业母基金与扬州市共同出资设立扬州航空航天产业专项母基金（有限合伙），规模16亿元，存续期15年，现公开遴选产业子基金管理机构，聚焦航空航天、高端装备领域", size: "16亿元", fbType: "soft", fbText: "返投扬州市≥1倍", detail: "省市联合产业专项母基金；出资结构：省级母基金4亿（25%）+扬州市区两级国企11.84亿（74%）+GP扬州战新0.16亿（1%）；产业子基金规模不低于3亿元（鼓励5亿元以上），注册于扬州市内；返投：直接投资扬州市内企业金额不低于母基金实际出资额1倍；管理费投资期≤1.5%/年；门槛收益率年化4%，业绩报酬不超超额收益20%；管理机构需为行业头部机构且管理规模≥50亿元；数据源：投资界（2026-08-07 09:50，pedaily 202608/567369）", industry: "航空航天、高端装备", url: "https://news.pedaily.cn/202608/567369.shtml", urlLabel: "投资界" },
+    { date: "2026-08-07", precise: true, cat: "listed", level: "provincial", name: "翰博高新（301321.SZ）· 与专业投资机构共同投资产业基金（关联交易，新一笔）", action: "上市公司翰博高新公告与专业投资机构共同投资产业基金暨关联交易（公告一+公告二），以LP身份参与新设产业基金，与2026-07-17青岛精确科启基金为不同事项", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（关联交易）；翰博高新（301321.SZ）为光电显示材料（光学膜/背光模组等）企业；本次同日披露两份公告（一）（二），与此前2026-07-17参投青岛精确科启基金为不同投资事项；以LP身份参与专业投资机构发起的产业基金，构成关联交易；系巨潮资讯结构化披露层召回（2026-08-07披露，adjunctUrl路径finalpage/2026-08-07/1225464734.PDF确认）", industry: "光电显示材料、光学薄膜", url: "http://static.cninfo.com.cn/finalpage/2026-08-07/1225464734.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-07", precise: true, cat: "listed", level: "provincial", name: "依顿电子（603328.SH）· 与私募基金合作投资", action: "上市公司依顿电子公告与私募基金合作投资，以LP/出资人身份参与私募基金，具体出资规模及基金名称详见公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；依顿电子（603328.SH）为高端多层印制电路板（PCB）制造商；与私募基金开展合作投资，围绕PCB/电子信息制造或相关产业链协同方向布局；系巨潮资讯结构化披露层召回（2026-08-07披露，adjunctUrl路径finalpage/2026-08-07/1225462750.PDF确认）", industry: "PCB（印制电路板）、电子信息制造", url: "http://static.cninfo.com.cn/finalpage/2026-08-07/1225462750.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-06", precise: true, cat: "gov", level: "national", name: "广东战新引导基金·新能源产业投资基金 · 公开遴选GP（申报截止2026-08-31）", action: "广东省战略性新兴产业投资引导基金拟设立新能源产业投资基金，面向社会公开遴选基金管理机构，聚焦新型能源体系/新能源产业关键环节，申报截止2026年8月31日中午12点", size: "未公开", fbType: "unk", fbText: "未公开", detail: "广东省战略性新兴产业投资引导基金（广东首只永续母基金）GP遴选；聚焦新能源产业：新型能源体系建设/新能源产业关键环节/绿色能源制造；系广东战新引导基金 2026年8月集中发布五只子基金GP征集矩阵之一；申报截止：2026年8月31日中午12点；数据源：投资界（2026-08-06，pedaily 202608/567328）", industry: "新能源（新型能源体系/关键环节制造）", url: "https://news.pedaily.cn/202608/567328.shtml", urlLabel: "投资界" },
+    { date: "2026-08-06", precise: true, cat: "gov", level: "national", name: "广东战新引导基金·海洋新兴产业投资基金 · 公开遴选GP（申报截止2026-08-31）", action: "广东省战略性新兴产业投资引导基金拟设立海洋新兴产业投资基金，面向社会公开遴选基金管理机构，聚焦海洋高端装备/海洋新材料/海洋电子信息，申报截止2026年8月31日中午12点", size: "未公开", fbType: "unk", fbText: "未公开", detail: "广东省战略性新兴产业投资引导基金（广东首只永续母基金）GP遴选；聚焦海洋新兴产业：海洋高端装备/海洋新材料/海洋电子信息/深海技术；广东为全国最大海洋经济省，设立专项海洋新兴产业基金；系广东战新引导基金 2026年8月集中发布五只子基金GP征集矩阵之一；申报截止：2026年8月31日中午12点；数据源：投资界（2026-08-06，pedaily 202608/567326）", industry: "海洋新兴产业（海洋高端装备/海洋新材料/海洋电子信息）", url: "https://news.pedaily.cn/202608/567326.shtml", urlLabel: "投资界" },
+    { date: "2026-08-06", precise: true, cat: "gov", level: "national", name: "广东战新引导基金·医疗器械产业投资基金 · 公开遴选GP（申报截止2026-08-31）", action: "广东省战略性新兴产业投资引导基金拟设立医疗器械产业投资基金，面向社会公开遴选基金管理机构，聚焦高端创新医疗器械，申报截止2026年8月31日中午12点", size: "未公开", fbType: "unk", fbText: "未公开", detail: "广东省战略性新兴产业投资引导基金（广东首只永续母基金）GP遴选；聚焦高端创新医疗器械赛道，涵盖高值耗材/影像设备/体外诊断/手术机器人等高端医疗装备；广东为全国医疗器械第一大省；系广东战新引导基金 2026年8月集中发布五只子基金GP征集矩阵之一；申报截止：2026年8月31日中午12点；数据源：投资界（2026-08-06，pedaily 202608/567321）", industry: "高端医疗器械（高值耗材/影像设备/手术机器人）", url: "https://news.pedaily.cn/202608/567321.shtml", urlLabel: "投资界" },
+    { date: "2026-08-06", precise: true, cat: "gov", level: "national", name: "广东战新引导基金·创新药产业投资基金 · 公开遴选GP（申报截止2026-08-31）", action: "广东省战略性新兴产业投资引导基金拟设立创新药产业投资基金，面向社会公开遴选基金管理机构，聚焦创新药源头创新/成果转化/产业化，申报截止2026年8月31日中午12点", size: "未公开", fbType: "unk", fbText: "未公开", detail: "广东省战略性新兴产业投资引导基金（广东首只永续母基金）GP遴选；聚焦创新药全链条：源头创新（基础研究）/成果转化/临床研究/产业化；广州、深圳为国内生物医药双核心；系广东战新引导基金 2026年8月集中发布五只子基金GP征集矩阵之一；申报截止：2026年8月31日中午12点；数据源：投资界（2026-08-06，pedaily 202608/567318）", industry: "创新药（源头创新/成果转化/产业化）", url: "https://news.pedaily.cn/202608/567318.shtml", urlLabel: "投资界" },
+    { date: "2026-08-06", precise: true, cat: "gov", level: "national", name: "广东战新引导基金·新材料产业投资基金 · 公开遴选GP（申报截止2026-08-31）", action: "广东省战略性新兴产业投资引导基金拟设立新材料产业投资基金，面向社会公开遴选基金管理机构，聚焦电子信息材料/新能源材料/高端金属材料/先进无机非金属材料，申报截止2026年8月31日中午12点", size: "未公开", fbType: "unk", fbText: "未公开", detail: "广东省战略性新兴产业投资引导基金（广东首只永续母基金）GP遴选；聚焦新材料产业赛道：电子信息材料/新能源材料/高端金属材料/先进无机非金属材料；系广东战新引导基金 2026年8月集中发布五只子基金GP征集矩阵之一；申报截止：2026年8月31日中午12点；数据源：投资界（2026-08-06，pedaily 202608/567323）", industry: "新材料（电子信息材料/新能源材料/高端金属材料）", url: "https://news.pedaily.cn/202608/567323.shtml", urlLabel: "投资界" },
+    { date: "2026-08-06", precise: true, cat: "listed", level: "provincial", name: "赣锋锂电（002460.SZ赣锋锂业旗下）· 参与投资有限合伙企业（关联交易）", action: "赣锋锂业旗下赣锋锂电参与投资有限合伙企业，构成关联交易，以LP身份出资参与相关产业投资基金", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（关联交易）；赣锋锂业（002460.SZ）为全球领先锂化合物/锂电池制造商，通过旗下赣锋锂电以LP身份参与有限合伙企业投资，构成关联交易；系巨潮资讯结构化披露层召回（2026-08-06披露，adjunctUrl路径finalpage/2026-08-06/1225460517.PDF确认）", industry: "锂电池、锂化工、新能源产业链", url: "http://static.cninfo.com.cn/finalpage/2026-08-06/1225460517.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-05", precise: true, cat: "listed", level: "provincial", name: "华创云信（600155.SH）· 参与设立股权投资基金", action: "上市公司华创云信公告参与设立股权投资基金，以LP/出资人身份参与基金设立，具体规模及基金名称详见公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC新设参与；华创云信（600155.SH）为数字化转型/云计算/IT服务商；参与设立股权投资基金，聚焦数字经济/科技产业协同方向；系巨潮资讯结构化披露层召回（2026-08-05披露，adjunctUrl路径finalpage/2026-08-05/1225458404.PDF确认）", industry: "数字化转型、云计算、IT服务", url: "http://static.cninfo.com.cn/finalpage/2026-08-05/1225458404.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-04", precise: true, cat: "listed", level: "provincial", name: "移为通信（300590.SZ）· 参与股权投资产业基金进展公告", action: "上市公司移为通信披露参与股权投资产业基金进展，以LP身份参与设立或认购产业基金，本次为进展公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展；移为通信（300590.SZ）为无线IoT/车联网/物联网终端设备商；以LP身份参与股权投资产业基金，围绕IoT/无线通信/新能源车联网等产业链协同布局；系巨潮资讯结构化披露层召回（2026-08-04披露，adjunctUrl路径finalpage/2026-08-04/1225457839.PDF确认）", industry: "IoT、车联网、无线通信", url: "http://static.cninfo.com.cn/finalpage/2026-08-04/1225457839.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-03", precise: true, cat: "gov", level: "provincial", name: "四川省文旅融合子基金（二期）· 公开遴选GP", action: "四川省文旅融合子基金发布第二期管理机构遴选公告，面向社会公开征集文旅融合方向子基金GP，聚焦数智科技与文旅融合全产业链", size: "未单独披露", fbType: "unk", fbText: "未公开", detail: "四川省级引导基金体系下文旅融合专项子基金二期；继一期（2026-07-14）之后再度启动GP征集；基金立足四川文化资源与数智科技优势，聚焦数智科技文旅融合全产业链（景区数智化/文创演艺/研学/非遗/低空文旅等）；采用招标方式遴选管理机构，截止时间2026年8月21日；管理机构为四川盈耀发展资产管理有限公司；配合四川省从文旅资源大省向产业强省转型战略；数据源：投资界（2026-08-03，pedaily 202608/567160）", industry: "文旅融合（数智科技、文创演艺、研学、非遗、低空文旅）", url: "https://news.pedaily.cn/202608/567160.shtml", urlLabel: "投资界" },
+    { date: "2026-08-04", precise: true, cat: "gov", level: "national", name: "四川省航空航天产业投资基金 · 公开遴选GP（认缴规模≥20亿元）", action: "四川省科技创新母基金拟设立航空航天产业子基金，目标认缴规模不低于20亿元，面向全国公开遴选基金管理机构", size: "目标认缴规模≥20亿元", fbType: "soft", fbText: "聚焦四川航空航天产业", detail: "省级政府引导基金GP遴选；聚焦四川省航空航天产业链，围绕成都航空航天装备制造/卫星互联网/商业航天等重点赛道布局；系四川省科技创新母基金2026年密集GP征集矩阵之一；数据源：投资界（2026-08-04，pedaily 202608/567218）", industry: "航空航天、卫星互联网、商业航天", url: "https://news.pedaily.cn/202608/567218.shtml", urlLabel: "投资界" },
+    { date: "2026-08-03", precise: true, cat: "gov", level: "national", name: "四川高校科技成果转化基金 · 100亿元电子信息子基金公开遴选GP", action: "四川高校科技成果转化基金拟设立电子信息子基金，目标规模100亿元，面向全国公开遴选基金管理机构，推动高校科技成果向产业化转化", size: "子基金目标规模100亿元", fbType: "soft", fbText: "聚焦四川电子信息产业", detail: "省级政府引导基金GP遴选；由四川高校科技成果转化母基金发起，聚焦电子信息产业科技成果转化；规模较大（100亿元），是四川2026年最大规模单只子基金招募之一；系国家级&ldquo;科技成果转化引导基金&rdquo;体系与地方产业基金生态协同布局；数据源：投资界（2026-08-03，pedaily 202608/567159）", industry: "电子信息、科技成果转化", url: "https://news.pedaily.cn/202608/567159.shtml", urlLabel: "投资界" },
+    { date: "2026-08-01", precise: true, cat: "gov", level: "national", name: "上海国投先导生物医药母基金 · 拟参投5只子基金（公示）", action: "上海国投先导基金公示，经遴选程序，上海国投先导生物医药母基金拟参与投资5只子基金：启明融康、信熹生命科技、凯辉营养健康、康君资本（四期）、杏泽五期医疗产业基金，公示期5个工作日", size: "母基金出资规模详见各子基金协议", fbType: "none", fbText: "生物医药方向", detail: "上海三大先导产业母基金子基金遴选落地；经《上海三大先导产业母基金子基金公开遴选细则（试行）》程序，五只子基金入围，涵盖生物技术/营养健康/医疗器械等多个细分赛道；上海国投先导生物医药母基金为上海市级重点国资产业基金，背靠上海国际集团；系2026年上海&ldquo;三大先导产业&rdquo;（集成电路/生物医药/人工智能）母基金体系的重要子基金投资动作；数据源：投资界（2026-08-03报道，公示日期2026-08-01，pedaily 202608/567145）", industry: "生物医药、医疗器械、营养健康", url: "https://news.pedaily.cn/202608/567145.shtml", urlLabel: "投资界" },
+    { date: "2026-08-04", precise: true, cat: "listed", level: "provincial", name: "长飞光纤（601869.SH）· 子公司拟参与设立私募基金", action: "上市公司长飞光纤公告子公司拟参与设立私募基金，以LP身份出资参与，具体基金名称及出资规模详见公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC新设参与；长飞光纤（601869.SH）为全球最大光纤预制棒/光纤及光缆生产商之一；以子公司LP身份参与设立私募基金，聚焦光通信/光纤产业链或AI算力光互联相关方向；系巨潮资讯结构化披露层召回（2026-08-04披露，adjunctUrl路径finalpage/2026-08-04/1225454860.PDF确认）", industry: "光纤、光通信、AI算力光互联", url: "http://static.cninfo.com.cn/finalpage/2026-08-04/1225454860.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-04", precise: true, cat: "listed", level: "provincial", name: "江山欧派（603208.SH）· 参与投资设立股权投资基金进展公告", action: "上市公司江山欧派公告参与投资设立股权投资基金进展，披露所参与基金最新进展情况", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展；江山欧派（603208.SH）为门窗及家居建材产品制造商（603208.SH）；以LP身份参与股权投资基金，聚焦建材/家居/新型建筑材料或产业协同赛道；系巨潮资讯结构化披露层召回（2026-08-04披露，adjunctUrl路径finalpage/2026-08-04/1225455469.PDF确认）", industry: "建材、家居、新型建筑材料", url: "http://static.cninfo.com.cn/finalpage/2026-08-04/1225455469.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-04", precise: true, cat: "listed", level: "provincial", name: "卫信康（603676.SH）· 参与认购私募基金份额", action: "上市公司卫信康公告参与认购私募基金份额，作为LP以自有资金认购，具体基金名称及出资规模详见公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；卫信康（603676.SH）为兽药/动物保健品制造商；以LP身份认购私募基金份额，聚焦大健康/动物保健/农业科技或产业协同方向；系巨潮资讯结构化披露层召回（2026-08-04披露，adjunctUrl路径finalpage/2026-08-04/1225454311.PDF确认）", industry: "动物保健、大健康、农业科技", url: "http://static.cninfo.com.cn/finalpage/2026-08-04/1225454311.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-04", precise: true, cat: "listed", level: "provincial", name: "金发科技（600143.SH）· 认购私募基金份额", action: "上市公司金发科技公告认购私募基金份额，作为LP出资参与，具体基金名称及出资规模详见公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；金发科技（600143.SH）为全球最大功能性高分子材料（改性塑料/特种工程塑料/可降解材料）企业之一；以LP身份认购私募基金份额，聚焦新材料/高分子材料/绿色化工或产业协同方向；系巨潮资讯结构化披露层召回（2026-08-04披露，adjunctUrl路径finalpage/2026-08-04/1225454676.PDF确认）", industry: "新材料、改性塑料、绿色化工", url: "http://static.cninfo.com.cn/finalpage/2026-08-04/1225454676.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-03", precise: true, cat: "market", level: "national", name: "比邻星上海四期创投基金 · 完成首关及备案（国家级引导基金+沪杭国资LP联合支持）", action: "上海比邻星四期创业投资合伙企业（有限合伙）完成首关及私募备案，首关机构LP包括长三角创业投资引导基金、上海未来产业基金、杭州临空股权投资、静安资本、市北高新（600604.SH）、恩威医药", size: "首关规模详见公告", fbType: "none", fbText: "市场化VC（医疗健康）", detail: "市场化创投基金首关落地；比邻星投资专注医疗健康与生命科学赛道；首关LP阵容跨越国家级/沪杭地方国资/上市公司产业资本多层次：长三角创业投资引导基金（国家级）+上海未来产业基金（市级）+杭州临空股权投资（区级）+静安资本（区级国资）+市北高新（上市CVC）+恩威医药（产业LP）；市北高新相关备案进展已于2026-07-31通过巨潮披露；本次为基金方视角完整LP阵容首次公开；数据源：投资界（2026-08-03 10:43，pedaily 202608/567155）", industry: "医疗健康、生命科学、生物技术", url: "https://news.pedaily.cn/202608/567155.shtml", urlLabel: "投资界" },
+    { date: "2026-08-03", precise: true, cat: "listed", level: "provincial", name: "运达股份（300772.SZ）· 对外投资公告", action: "上市公司运达股份公告对外投资，以LP/出资人身份参与设立或认购基金，具体出资规模及基金名称详见公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；运达股份（300772.SZ）为陆上风电整机制造商；以LP身份对外投资参设基金，聚焦新能源/风电产业链或绿色能源相关方向；系巨潮资讯结构化披露层召回（2026-08-03披露，adjunctUrl路径finalpage/2026-08-03/1225456077.PDF确认）", industry: "风电、新能源、绿色能源", url: "http://static.cninfo.com.cn/finalpage/2026-08-03/1225456077.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-03", precise: true, cat: "listed", level: "provincial", name: "康华生物（300841.SZ）· 对外投资暨关联交易进展公告", action: "上市公司康华生物公告对外投资暨关联交易进展，以LP身份参与设立或认购基金，本次为进展披露", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展（关联交易）；康华生物（300841.SZ）为人用疫苗（手足口病EV71疫苗等）研发与生产商；以LP身份参与基金，聚焦生物医药/疫苗/大健康产业协同方向；构成关联交易；系巨潮资讯结构化披露层召回（2026-08-03披露，adjunctUrl路径finalpage/2026-08-03/1225455008.PDF确认）", industry: "疫苗、生物医药、大健康", url: "http://static.cninfo.com.cn/finalpage/2026-08-03/1225455008.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-07-31", precise: true, cat: "market", level: "national", name: "投资界LP周报（7/25-7/31）· 本周25起LP动态汇总", action: "投资界&ldquo;解码LP&rdquo;栏目发布7月25日至7月31日LP周报，汇总本周25起LP动态，涵盖政府引导基金、市场化母基金、上市公司CVC等多类型LP动向", size: "25起LP动态（详见原文）", fbType: "none", fbText: "行业周报", detail: "LP动态周度汇总；本期亮点包括：金芙蓉现代石化产业子基金50亿元完成备案（央地联合首支石化基金）、济南先投鹊起30亿元落地济南起步区、天津天河智能生态基金5亿元落地（天津城投+武清区+博通资本联合）等；系投资界&ldquo;解码LP&rdquo;系列周报，覆盖面广、信源可靠；数据源：投资界（2026-07-31，pedaily 202607/567111）", industry: "综合（LP行业周报）", url: "https://news.pedaily.cn/202607/567111.shtml", urlLabel: "投资界" },
+    { date: "2026-07-29", precise: true, cat: "gov", level: "provincial", name: "金芙蓉现代石化产业子基金 · 50亿元完成备案（四川央地联合首支石化基金）", action: "金芙蓉现代石化产业股权投资基金（有限合伙）完成私募基金备案，总规模50亿元，系四川省首支央地联合石化产业基金，由中国石化资本与四川省级国资联合发起", size: "基金规模50亿元", fbType: "soft", fbText: "聚焦四川现代石化产业", detail: "省级产业基金备案落地；金芙蓉现代石化产业子基金为四川省首支央地联合石化专项产业基金，由中国石化资本（央企）与四川省级国资共同出资，落地四川；聚焦现代石化、新材料及化工产业链延伸赛道；系&ldquo;金芙蓉&rdquo;系列（四川省国资产业基金品牌）首支石化专题子基金，备案标志资金到位进入正式投资运营阶段；数据源：投资界LP周报（2026-07-31，pedaily 202607/567111）", industry: "现代石化、新材料、化工产业链", url: "https://news.pedaily.cn/202607/567111.shtml", urlLabel: "投资界" },
+    { date: "2026-07-28", precise: true, cat: "gov", level: "provincial", name: "济南先投鹊起股权投资合伙企业 · 30亿元落地济南新旧动能转换起步区", action: "济南先投鹊起股权投资合伙企业（有限合伙）完成设立并落地济南新旧动能转换起步区，总规模30亿元，聚焦先进制造业及新兴产业引导投资", size: "基金规模30亿元", fbType: "soft", fbText: "聚焦济南起步区产业", detail: "省会城市产业基金新设落地；济南新旧动能转换起步区为国家级重点区域；&ldquo;先投鹊起&rdquo;命名凸显济南起步区战略定位；聚焦先进制造、数字经济、新兴产业，服务起步区产业生态构建与招商引资；规模30亿元，是济南2026年重点产业基金布局之一；对具备起步区产业资源整合能力的GP具有明确合作诉求；数据源：投资界LP周报（2026-07-31，pedaily 202607/567111）", industry: "先进制造、数字经济、新兴产业（济南起步区）", url: "https://news.pedaily.cn/202607/567111.shtml", urlLabel: "投资界" },
+    { date: "2026-07-27", precise: true, cat: "market", level: "provincial", name: "天津天河智能生态基金 · 5亿元落地（天津城投+武清区+博通资本联合）", action: "天津天河智能生态股权投资基金（有限合伙）完成设立，总规模5亿元，由天津城投集团、武清区政府平台与博通资本联合发起", size: "基金规模5亿元", fbType: "soft", fbText: "聚焦天津武清智能产业", detail: "市区联动产业基金新设；天津城投（市级国资）+武清区政府平台+博通资本（市场化GP）三方联合，落地天津武清区；聚焦智能制造、智能生态、数字经济方向，服务武清区智能产业集群建设；&ldquo;天河智能生态&rdquo;命名契合武清区智行天下产业品牌定位；数据源：投资界LP周报（2026-07-31，pedaily 202607/567111）", industry: "智能制造、数字经济、智能生态（天津武清）", url: "https://news.pedaily.cn/202607/567111.shtml", urlLabel: "投资界" },
+    { date: "2026-08-01", precise: true, cat: "listed", level: "county", name: "市北高新（600604.SH）· 参投上海新静普创业投资合伙企业进展暨完成基金备案", action: "上市公司市北高新公告参投上海新静普创业投资合伙企业（有限合伙）进展，该基金已完成中基协私募基金备案登记", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展（备案落地）；市北高新为上海静安园区开发与科创服务平台；新静普创投基金为市北高新2026年布局的首支园区创投基金（2026-07-17首次公告参设），本次为备案完成进展公告，标志该基金正式进入投资运营阶段；系巨潮资讯结构化披露层召回（2026-08-01披露，adjunctUrl路径1225450596确认）", industry: "科技型企业早期孵化（园区科创）", url: "http://static.cninfo.com.cn/finalpage/2026-08-01/1225450596.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-01", precise: true, cat: "listed", level: "provincial", name: "华立科技（301011.SZ）· 与专业投资机构共同投资设立产业基金", action: "上市公司华立科技公告与专业投资机构共同投资设立产业基金，作为LP出资参与设立，具体基金名称及出资规模详见公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC新设参与；华立科技为PCB/电路板制造及智能制造设备商；以LP身份参与专业投资机构发起的产业基金，围绕电子制造/硬科技方向布局；系巨潮资讯结构化披露层召回（2026-08-01披露，adjunctUrl路径1225451654确认）", industry: "电子制造、硬科技产业", url: "http://static.cninfo.com.cn/finalpage/2026-08-01/1225451654.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-01", precise: true, cat: "listed", level: "provincial", name: "东软集团（600718.SH）· 参与设立专项基金进展公告", action: "上市公司东软集团公告参与设立专项基金进展，披露所参与设立的基金最新进展情况", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展；东软集团为国内领先医疗IT/医学影像/汽车软件及智慧城市解决方案商；参与设立专项基金，聚焦数字医疗/智慧城市或相关产业链方向；系巨潮资讯结构化披露层召回（2026-08-01披露，adjunctUrl路径1225450651确认）", industry: "医疗IT、智慧城市、数字化转型", url: "http://static.cninfo.com.cn/finalpage/2026-08-01/1225450651.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-01", precise: true, cat: "listed", level: "provincial", name: "川能动力（000155.SZ）· 参与发起设立基金完成私募投资基金备案", action: "上市公司川能动力公告参与发起设立的基金已完成中国证券投资基金业协会私募投资基金备案", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（备案落地）；川能动力为四川省能源投资集团旗下上市平台，主营水电、风电等清洁能源；参与发起设立能源/新能源产业相关基金并完成备案，标志该基金正式进入投资运营阶段；系巨潮资讯结构化披露层召回（2026-08-01披露，adjunctUrl路径1225451503确认）", industry: "清洁能源、新能源产业链", url: "http://static.cninfo.com.cn/finalpage/2026-08-01/1225451503.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-01", precise: true, cat: "listed", level: "provincial", name: "恒为科技（603496.SH）· 对外投资设立投资基金", action: "上市公司恒为科技公告对外投资设立投资基金，以LP/出资人身份参与设立，具体基金名称及出资规模详见公告", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC新设参与；恒为科技为网络通信设备及军工电子产品研发商；对外投资设立基金，聚焦主业协同的通信/军工电子/硬科技方向；系巨潮资讯结构化披露层召回（2026-08-01披露，adjunctUrl路径1225451712确认）", industry: "网络通信、军工电子、硬科技", url: "http://static.cninfo.com.cn/finalpage/2026-08-01/1225451712.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-01", precise: true, cat: "listed", level: "provincial", name: "兆易创新（603986.SH）· 参与投资私募股权投资基金进展", action: "上市公司兆易创新公告参与投资私募股权投资基金进展，披露所参与基金的最新进展情况", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展；兆易创新为国内领先存储芯片（NOR Flash/NAND/DRAM）及MCU设计商；以LP身份参与私募股权投资基金，聚焦半导体/芯片产业链相关投资；系巨潮资讯结构化披露层召回（2026-08-01披露，adjunctUrl路径1225450996确认）", industry: "半导体、存储芯片、MCU", url: "http://static.cninfo.com.cn/finalpage/2026-08-01/1225450996.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-07-31", precise: true, cat: "listed", level: "provincial", name: "博士眼镜（300622.SZ）· 受让合伙企业份额暨与专业投资机构共同投资", action: "上市公司博士眼镜公告受让合伙企业份额暨与专业投资机构共同投资，以LP身份受让或参与投资设立基金", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；博士眼镜为国内连锁眼镜零售龙头；通过受让合伙企业份额或与专业投资机构共同投资方式参与基金，聚焦大健康/消费科技或产业协同方向；系巨潮资讯结构化披露层召回（2026-07-31披露，adjunctUrl路径1225450546确认）", industry: "大健康、消费科技", url: "http://static.cninfo.com.cn/finalpage/2026-07-31/1225450546.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-08-01", precise: true, cat: "listed", level: "provincial", name: "ST绝味（603517.SH）· 全资子公司参与股权投资基金进展", action: "上市公司ST绝味公告全资子公司参与股权投资基金进展，披露所参与基金的最新进展情况", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展；ST绝味为鸭脖卤味连锁龙头（绝味食品旗下）；通过全资子公司以LP身份参与股权投资基金，向消费/食品产业链相关方向布局；系巨潮资讯结构化披露层召回（2026-08-01披露，adjunctUrl路径1225452370确认）", industry: "消费、食品产业链", url: "http://static.cninfo.com.cn/finalpage/2026-08-01/1225452370.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-07-31", precise: true, cat: "gov", level: "provincial", name: "五家渠经济技术开发区润疆产业引导基金 · 公开遴选管理机构", action: "新疆五家渠经济技术开发区润疆产业引导基金面向社会公开遴选基金管理机构，聚焦五家渠及新疆重点产业引导与培育", size: "详见遴选公告", fbType: "soft", fbText: "返投五家渠/新疆", detail: "政府产业引导基金GP遴选；五家渠经开区位于新疆，系兵团级重点产业园区；润疆产业引导基金旨在引导社会资本投向新疆重点产业，支持当地产业升级与招商引资；数据源：投资界（2026-07-31，pedaily 202607/567102）", industry: "新疆重点产业（制造/农业/能源）", url: "https://news.pedaily.cn/202607/567102.shtml", urlLabel: "投资界" },
+    { date: "2026-07-28", precise: true, cat: "gov", level: "provincial", name: "山西省制造业振兴升级股权投资基金 · 100亿元成立", action: "山西省制造业振兴升级股权投资基金正式成立，总规模100亿元，重点支持山西省制造业转型升级、高端装备与新材料产业发展", size: "基金规模100亿元", fbType: "soft", fbText: "聚焦山西制造业", detail: "省级政府产业基金新设；由山西省国资委/省属国企联合社会资本共同出资设立；聚焦山西省传统制造业振兴升级与高端制造新赛道培育，推动煤炭等资源型省份产业结构转型；对优质制造业/硬科技GP具有明确产业协同诉求；数据源：投资界（2026-07-28，pedaily 202607/566890）", industry: "制造业振兴、高端装备、新材料", url: "https://news.pedaily.cn/202607/566890.shtml", urlLabel: "投资界" },
+    { date: "2026-07-30", precise: true, cat: "gov", level: "national", name: "维港纽带创科基金 · 上海国投×香港特区政府联手设立（6亿港元）", action: "上海国际集团旗下上海国投与香港特区政府联手设立维港纽带创科基金，总规模6亿港元，专注沪港两地科创项目的跨境投资与协同孵化", size: "基金规模6亿港元", fbType: "soft", fbText: "沪港科创协同", detail: "国家级跨境科创基金新设；上海国投（上海市级国资核心投资平台）与香港特区政府共同发起，聚焦沪港两地互补科创资源整合、推动优质硬科技项目跨境落地；以&ldquo;维港纽带&rdquo;命名，强调沪港金融+科创双向联动；可作为具备跨境科创项目落地能力GP的关注标的；数据源：投资界（2026-07-30，pedaily 202607/567051）", industry: "跨境科创（沪港协同、硬科技、生物医药）", url: "https://news.pedaily.cn/202607/567051.shtml", urlLabel: "投资界" },
+    { date: "2026-07-30", precise: true, cat: "gov", level: "provincial", name: "豫信先进计算领航（河南）私募股权投资基金 · 10亿元完成设立", action: "豫信先进计算领航（河南）私募股权投资基金正式完成设立，总规模10亿元，由豫信电科联合社会资本共同发起，聚焦先进计算/算力基础设施与AI赋能产业投资", size: "基金规模10亿元", fbType: "soft", fbText: "聚焦河南先进计算/算力", detail: "省级国资产业基金新设；豫信电科为河南省国资委旗下信息化/数字化专业平台；聚焦先进计算、算力基础设施、AI应用等数字经济核心赛道，服务河南省数字经济转型与算力枢纽建设；对具备算力/AI/先进计算GP资源整合能力的机构具有战略协同价值；数据源：投资界（2026-07-30，pedaily 202607/567037）", industry: "先进计算、算力基础设施、人工智能", url: "https://news.pedaily.cn/202607/567037.shtml", urlLabel: "投资界" },
+    { date: "2026-07-29", precise: true, cat: "gov", level: "national", name: "雄安空天信息和卫星互联网产业投资基金 · 面向全国招募子基金管理机构（10亿元）", action: "雄安基金拟发起设立雄安空天信息和卫星互联网产业投资基金（暂定名），规模10亿元，主要投向符合雄安新区产业发展要求的空天信息与卫星互联网科技项目，现面向全国公开征集子基金管理机构", size: "基金规模10亿元", fbType: "unk", fbText: "未公开", detail: "雄安新区国家级基金体系；聚焦空天信息、卫星互联网两大前沿赛道，服务雄安新区&ldquo;空天地一体化&rdquo;产业布局与北京非首都功能疏解；与同期雄安颠覆性科技创新基金（2亿）、雄安新质生产力基金（10亿）、雄安AI和数字经济基金（10亿）共同构成雄安新区2026年密集GP征集矩阵；申报截止日详见遴选公告；数据源：投资界（2026-07-29，pedaily 202607/566947）", industry: "空天信息、卫星互联网", url: "https://news.pedaily.cn/202607/566947.shtml", urlLabel: "投资界" },
+    { date: "2026-07-29", precise: true, cat: "gov", level: "national", name: "雄安颠覆性科技创新基金 · 面向全国招募子基金管理机构（2亿元）", action: "雄安基金拟发起设立雄安颠覆性科技创新基金（暂定名），规模2亿元，主要投向具有颠覆性技术创新潜力的硬科技项目，现面向全国公开征集子基金管理机构", size: "基金规模2亿元", fbType: "unk", fbText: "未公开", detail: "雄安新区国家级基金体系；聚焦&ldquo;颠覆性科技&rdquo;方向，规模较小但导向鲜明，专注未来产业前沿技术孵化；与同期雄安空天信息（10亿）、雄安新质生产力（10亿）、雄安AI和数字经济（10亿）共同构成雄安新区2026年四只GP征集基金矩阵；对具备深科技/前沿技术投资能力GP具备较高吸引力；申报截止日详见遴选公告；数据源：投资界（2026-07-29，pedaily 202607/566960）", industry: "颠覆性科技、前沿技术、未来产业", url: "https://news.pedaily.cn/202607/566960.shtml", urlLabel: "投资界" },
+    { date: "2026-07-31", precise: true, cat: "market", level: "provincial", name: "天堂硅谷领新四期基金 · 签约落地（目标规模10亿元）", action: "天堂硅谷领新四期私募股权投资基金完成签约落地，目标募集规模10亿元，聚焦硬科技/高端制造/新能源等赛道", size: "目标规模10亿元", fbType: "soft", fbText: "浙江/长三角返投", detail: "市场化母基金/GP基金新设；天堂硅谷为浙江本土知名PE/VC机构，领新系列为其核心旗舰产品线；四期基金延续前三期聚焦硬科技、高端制造与新能源等方向；对浙江省及长三角区域LP具有较强返投号召力；数据源：投资界（2026-07-31，pedaily 202607/567075）", industry: "硬科技、高端制造、新能源", url: "https://news.pedaily.cn/202607/567075.shtml", urlLabel: "投资界" },
+    { date: "2026-07-27", precise: true, cat: "gov", level: "provincial", name: "苏州人工智能产业专项母基金 · 拟参股苏州苏创战新AI基金", action: "苏州人工智能产业专项母基金拟参股苏州苏创战新人工智能股权投资基金，以母基金LP身份参与AI产业基金，推动苏州人工智能产业集群建设", size: "详见公告", fbType: "soft", fbText: "返投苏州AI产业", detail: "政府产业母基金参股子基金动作；苏州人工智能产业专项母基金为苏州市级AI专项政府引导基金；苏州苏创战新AI基金为其拟参股子基金，聚焦AI大模型应用、智能制造、AI+垂直行业等苏州人工智能重点产业方向；系国内AI产业母基金生态中的典型&ldquo;母基金参股子基金&rdquo;动作，GP可参考苏州AI产业政策导向；数据源：投资界（2026-07-27，pedaily 202607/566868）", industry: "人工智能、AI应用、智能制造", url: "https://news.pedaily.cn/202607/566868.shtml", urlLabel: "投资界" },
+    { date: "2026-07-31", precise: true, cat: "listed", level: "national", name: "市北高新（600604.SH）· 对外投资上海比邻星四期创投基金进展暨完成基金备案", action: "上市公司市北高新公告对外投资上海比邻星四期创业投资合伙企业（有限合伙）进展，该基金已完成中基协私募基金备案", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展（备案落地）；市北高新为上海静安园区开发与科创服务平台；本次为参投比邻星四期创投基金的备案完成进展公告，标志该基金正式进入投资运营阶段；市北高新年内已多次出手布局园区科创基金（7月已参设新静普/东证新静界两支基金），本次为第三支；系巨潮资讯结构化披露层召回（2026-07-31披露，adjunctUrl路径确认）", industry: "科技型企业早期孵化（园区科创）", url: "http://static.cninfo.com.cn/finalpage/2026-07-31/1225448657.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-07-30", precise: true, cat: "gov", level: "national", name: "郑州市战略新兴产业母基金 · 公开遴选子基金管理机构（规模50亿元）", action: "郑州市战略新兴产业母基金现面向社会公开遴选子基金管理机构，管理机构为河南省国创混改基金管理有限公司；电子版材料最晚接收2026年8月10日18:00，纸质最晚2026年8月11日18:00", size: "母基金规模50亿元", fbType: "unk", fbText: "未公开", detail: "郑州市委市政府统筹部署，打造先进制造业高地；管理机构为河南省国创混改基金管理有限公司；采用择优遴选方式（申报材料提交后视为认同全部要求）；遴选赛道为战略性新兴产业，围绕河南省重点产业布局；新能源汽车、电子信息、装备制造等中原核心产业是重点方向；系国办函[2026]54号新政后中部省会城市产业母基金新一轮GP征集动作，同期还有郑州天使基金（10亿）并行招募；数据源：新浪科技/投资界（原文2026-07-30 15:53:55）", industry: "战略性新兴产业（新能源汽车/电子信息/先进制造/生物医药）", url: "https://finance.sina.com.cn/tech/roll/2026-07-30/doc-inikqqhf1230887.shtml", urlLabel: "新浪财经" },
+    { date: "2026-07-30", precise: true, cat: "market", level: "national", name: "中国母基金半年报（2026H1）· 规模3.5万亿、DPI回升、永续母基金落地", action: "《2026上半年中国母基金全景报告》发布：473家母基金总管理规模35181亿元（同比降12.56%），政府引导基金DPI升至0.79，市场化母基金DPI升至0.88，&ldquo;永续母基金&rdquo;从概念走向现实，多地容错机制落地", size: "473家母基金，总规模3.52万亿元（35181亿元）", fbType: "none", fbText: "行业综述", detail: "2026中国母基金峰会发布H1报告；结构：政府引导基金346家（30549亿元）+ 市场化117家（4566亿元）；H1新设34只母基金（其中政引33只），合计新设规模1698亿元；H1投资总额2609亿元（同比-21.84%）；两类母基金DPI同步走高，退出回暖正切实转化为现金回报；制度亮点：广东首只永续母基金（省级战新基金）落地、57%新设引导基金允许存续期>10年、单项目100%亏损容错写入操作细则；国资LP出资2026H1同比降36.89%，非国资出资反升15.84%；整体格局：头部机构募资顺畅，中小机构压力加大；数据源：每经网（2026-07-30 19:32:11）", industry: "综合（母基金行业半年度综述）", url: "https://www.nbd.com.cn/articles/2026-07-30/4527044.html", urlLabel: "每经网" },
+    { date: "2026-07-29", precise: true, cat: "gov", level: "national", name: "雄安新质生产力科技创新创业投资基金 · 面向全国招募子基金管理机构（10亿元）", action: "雄安基金拟发起设立雄安新质生产力科技创新创业投资基金（暂定名），规模10亿元，主要投向符合雄安新区产业发展要求的科技创新项目，现面向全国公开征集子基金管理机构", size: "基金规模10亿元", fbType: "unk", fbText: "未公开", detail: "雄安新区国家级新区基金体系发起；定位新质生产力、科技创新方向，服务雄安疏解北京非首都功能与高质量创新生态构建；同期还发布了&ldquo;雄安人工智能和数字经济产业投资基金&rdquo;（10亿）双基金同步征集GP；系雄安新区基金体系2026年密集布局硬科技/AI/新质生产力的系列动作；申报截止日详见遴选公告；数据源：新浪科技/投资界（原文2026-07-29 09:47:00）", industry: "科技创新、新质生产力（雄安新区重点产业）", url: "https://finance.sina.com.cn/tech/roll/2026-07-29/doc-inikmump1602452.shtml", urlLabel: "新浪财经" },
+    { date: "2026-07-29", precise: true, cat: "gov", level: "national", name: "雄安人工智能和数字经济产业投资基金 · 面向全国招募子基金管理机构（10亿元）", action: "雄安基金将发起设立雄安人工智能和数字经济产业投资基金（暂定名），规模10亿元，现面向全国公开征集子基金管理机构", size: "基金规模10亿元", fbType: "unk", fbText: "未公开", detail: "雄安新区国家级基金体系发起；聚焦人工智能、数字经济两大国家级战略产业赛道，服务雄安数字雄安建设与智能城市发展目标；与同期发布的&ldquo;雄安新质生产力科技创新创业投资基金&rdquo;形成双轮驱动格局；AI与数字经济方向GP申报或具备一定产业赋能背景要求；申报截止日详见遴选公告；数据源：新浪科技/投资界（原文2026-07-29 10:51:00）", industry: "人工智能、数字经济", url: "https://finance.sina.com.cn/tech/roll/2026-07-29/doc-inikmumt2696954.shtml", urlLabel: "新浪财经" },
+    { date: "2026-07-29", precise: true, cat: "listed", level: "provincial", name: "盛剑科技（603324.SH）· 认购嘉兴璟冠同途创投基金份额进展公告", action: "上市公司盛剑科技发布认购私募基金份额进展公告，披露嘉兴璟冠同途股权投资合伙企业（有限合伙）最新进展", size: "出资1000万元（进展公告）", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展追踪；盛剑科技（603324.SH）为半导体工艺废气治理/湿电子化学品设备商；GP为上海泽壹创业投资有限公司；首次公告于2026-07-08（临2026-035），2026-07-22披露认购完成进展，本次（2026-07-29临2026-038）为最新进展公告；系巨潮资讯结构化披露层召回（adjunctUrl路径确认2026-07-29）", industry: "半导体设备、湿电子化学品", url: "http://static.cninfo.com.cn/finalpage/2026-07-29/1225444428.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-07-30", precise: true, cat: "listed", level: "provincial", name: "复星医药（600196）", action: "参与设立投资基金完成私募基金备案", size: "—", fbType: "none", fbText: "CVC/上市公司", detail: "上市医药龙头参与设立产业投资基金，该基金已完成私募基金备案。作为上市公司产业资本（CVC）向基金出资，可作为医药方向 GP 的潜在 LP。", industry: "医药健康", url: "http://static.cninfo.com.cn/finalpage/2026-07-30/1225446420.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-07-27", precise: true, cat: "gov", level: "national", name: "中核（江苏）战新创投（央地协同）", action: "中核产业基金、诚通科创江苏、南京江北新区产业基金共同出资设立", size: "27亿元", fbType: "unk", fbText: "未公开遵导机制", detail: "中国核工业集团、南京江北新区高质量发展产业投资基金、诚通科创投资基金（江苏）等共同出资设立，执行事务合伙人为中核产业基金管理。央企（中核、诚通）与地方国资协同的战略新兴创投平台，落地南京江北新区。", industry: "核电/核技术/新能源/新材料", url: "https://finance.eastmoney.com/a/202607273821843471.html", urlLabel: "东方财富" },
+    { date: "2026-07-29", precise: true, cat: "listed", level: "national", name: "众合科技（000925.SZ）· 与招商局资本合作设立产业基金进展（公告之三）", action: "上市公司众合科技披露与招商局资本合作发起设立产业基金的进展公告（之三），持续推进与招商局资本管理（北京）合作的产业基金落地", size: "出资规模详见公告（历史合作口径为5000万元级LP出资）", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展；众合科技为轨道交通信号系统/智慧交通与半导体材料（区熔硅单晶）双主业企业；本次为与招商局资本合作产业基金的第三次进展披露，围绕TMT硬科技、智能交通、半导体等主业协同赛道以LP身份布局；具体基金全称/规模/出资比例以公告原文为准；系巨潮资讯结构化披露层召回条目（2026-07-29披露）", industry: "智能交通、半导体材料、TMT硬科技", url: "http://static.cninfo.com.cn/finalpage/2026-07-29/1225445256.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-07-29", precise: true, cat: "listed", level: "provincial", name: "好想你（002582.SZ）· 3000万元认购安徽琨山罗曼新创创投基金份额", action: "上市公司好想你公告与专业投资机构共同投资，以自有资金3000万元认购安徽琨山罗曼新创创业投资合伙企业（有限合伙）份额，作为LP入场", size: "认购出资3000万元（基金拟募集总规模2.80亿元）", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；好想你为红枣及健康食品龙头（郑州），此前已通过出售百草味实现资金储备充裕；GP为北京琨山资本管理有限公司；基金投资方向为科技行业企业股权投资；好想你表示本次出资旨在优化产业布局、提升资本运作能力，并借助专业机构行业资源做产业协同布局；系巨潮资讯结构化披露层召回条目（2026-07-29披露），2026-07-30投资界/新浪财经跟进报道", industry: "大健康、科技行业股权投资", url: "http://static.cninfo.com.cn/finalpage/2026-07-29/1225445675.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-07-28", precise: true, cat: "gov", level: "provincial", name: "郑州市天使投资基金 · 公开遴选子基金管理机构（规模10亿元）", action: "郑州市天使投资基金面向社会公开遴选子基金管理机构，基金规模10亿元，管理人为郑州创新投私募基金管理有限公司；电子材料最晚接收时间2026年8月17日18:00", size: "母基金规模10亿元", fbType: "unk", fbText: "未公开", detail: "政府天使引导基金GP遴选；由郑州产业投资集团设立、郑州创新投私募基金管理有限公司担任管理人，聚焦优化郑州创新创业生态、促进科技成果转化与未来产业布局；采用电子+纸质材料相结合申报方式；系国办函[2026]54号新政后中部省会城市天使/耐心资本新增载体；数据源：投资界/新浪财经（原文2026-07-28）", industry: "郑州市科技成果转化与未来产业（早期/天使）", url: "https://finance.sina.com.cn/tech/roll/2026-07-28/doc-inikimei2610091.shtml", urlLabel: "新浪财经" },
+    { date: "2026-07-28", precise: true, cat: "listed", level: "provincial", name: "南京商旅（600250.SH）· 参与设立文旅并购基金进展（关联交易）", action: "上市公司南京商旅公告参与设立文旅并购基金暨关联交易进展，以LP身份参与南京市、区属国资联合发起的文旅强链并购股权投资基金", size: "出资额详见公告（关联交易）", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资进展；南京商旅为南京市属文旅商贸平台，本次进展对应南京云枢文旅强链并购股权投资基金（总认缴5亿元，首期实缴1亿元已于2026-07-06到账）；聚焦文旅产业链并购重组、存量资产盘活及优质业态股权投资，以南京为主辐射长三角；构成关联交易；系巨潮资讯结构化披露层召回条目（2026-07-28披露）", industry: "文旅（并购重组/存量资产盘活/优质业态）", url: "http://static.cninfo.com.cn/finalpage/2026-07-28/1225442391.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-07-23", precise: true, cat: "listed", level: "provincial", name: "欣旺达（300207.SZ）· 全资子公司参设天津开欣储能股权投资基金完成备案（5亿元）", action: "上市公司欣旺达公告全资子公司深圳欣能产业发展科技作为LP参与设立的天津开欣储能股权投资合伙企业（有限合伙）已于2026年7月22日完成中基协备案", size: "基金注册规模5亿元", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（备案落地）；欣旺达为消费电池/动力与储能电池龙头，通过全资子公司深圳欣能产业发展科技以LP身份参与开欣储能基金；GP为开弦资本管理有限公司；基金聚焦储能/新能源产业链上下游，服务欣旺达储能主业协同；备案日期2026-07-22、公告2026-07-23；数据源：投资界LP周报/大河财立方（原文2026-07-23）", industry: "储能、新能源产业链", url: "https://news.pedaily.cn/202607/566802.shtml", urlLabel: "投资界" },
+    { date: "2026-07-28", precise: true, cat: "listed", level: "provincial", name: "欣贺股份（003016.SZ）· 全资子公司1000万元认购厦门博睿恒昌创投基金份额", action: "上市公司欣贺股份公告全资子公司厦门欣贺腾盈投资作为有限合伙人，以自有资金1000万元认购厦门博睿恒昌创业投资合伙企业（有限合伙）扩募份额，占其认缴出资总额16.58%", size: "出资1000万元（占基金认缴总额6031万元的16.58%）", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC小额出资；欣贺股份为高端女装品牌运营商（厦门），通过全资子公司欣贺腾盈以LP身份认购博睿恒昌创投基金扩募份额；GP为厦门若松私募基金管理有限公司；基金存续5年（投资期3年+退出期2年），已在中基协备案（编号SCL079）；不构成关联交易，出资占最近一期审计净资产0.37%；数据源：巨潮资讯/中财网（公告2026-034，2026-07-28披露）", industry: "创业投资（早期科创）", url: "https://cfi.net.cn/p20260727002115.html", urlLabel: "中财网" },
+    { date: "2026-07-28", precise: false, cat: "listed", level: "provincial", name: "新特电气（301120.SZ）· 认购产业投资基金份额（关联交易）", action: "上市公司新特电气公告认购产业投资基金份额暨关联交易，作为LP参与产业投资基金，具体出资额及基金规模详见公告", size: "认购金额详见公告（关联交易）", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资（关联交易）；新特电气为特种变压器/电抗器等输变电设备制造商；本次以LP身份认购产业投资基金份额，构成关联交易；系巨潮资讯结构化披露层召回条目，出资额/基金名称以公告原文为准；数据源：巨潮资讯（2026-07-28披露）", industry: "输变电设备/产业投资", url: "http://static.cninfo.com.cn/finalpage/2026-07-28/1225443681.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-07-27", precise: false, cat: "listed", level: "provincial", name: "古鳌科技（300551.SZ）· 参与投资设立股权投资基金", action: "上市公司古鳌科技公告参与投资设立股权投资基金，作为出资人参与设立基金，具体出资额及基金规模详见公告", size: "出资额详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；古鳌科技为金融机具/清分机及数字人民币相关设备商（近年拓展AI等新业务）；本次参与投资设立股权投资基金，以LP/出资人身份布局；系巨潮资讯结构化披露层召回条目，出资额/基金名称以公告原文为准；数据源：巨潮资讯（2026-07-27披露）", industry: "金融科技/股权投资", url: "http://static.cninfo.com.cn/finalpage/2026-07-27/1225443710.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-07-25", precise: false, cat: "market", level: "national", name: "投中网《LP周报》（2026-07-25）· 3条募资动态+18只新基金+徐州/榆林招GP", action: "投中网周度LP情报：本周含3条募资动态、18只新基金成立、徐州市天使基金与榆林市科创母基金公开遴选GP；深圳市重投一号基金（100亿/首期39.4亿）迎人大教育基金会首次以LP身份出资2000万元", size: "多只基金合计数百亿元（详见周报）", fbType: "soft", fbText: "多地返投", detail: "市场化LP/母基金周度汇总。募资动态：元禾厚望创新成长三期基金15亿元完成首关（聚焦硬科技与AI应用，基石元禾控股）；上实资本上海生物医药基金二期落地（目标20亿、首轮认缴15亿，上海医药/君实生物等产业方为LP）；长石资本四川硬科技三期基金12.75亿元终关。新基金：上海国新产创私募基金60.02亿元（央企战新基金首批子基金）、诚创苏拓南京创投约30亿元（诚通科创江苏基金落子）、青岛金石文化科技基金10亿元（中信金石+青岛啤酒）等。招GP：徐州市天使基金（≤10亿）、榆林市科创母基金（首期20亿）；数据源：投中网", industry: "硬科技/AI/生物医药/新能源等", url: "https://www.chinaventure.com.cn/news/80-20260725-392456.html", urlLabel: "投中网" },
+    { date: "2026-07-24", precise: false, cat: "gov", level: "provincial", name: "济南高端装备制造与新材料产业基金 · 公开征集合作机构（规模不低于2亿元）", action: "济南市财政投资基金控股集团公开征集高端装备制造与新材料产业基金合作机构，拟与市场化机构围绕高端装备制造与新材料领域设立规模不低于2亿元的产业基金，申报截止2026年7月27日", size: "拟设规模不低于2亿元", fbType: "soft", fbText: "服务济南产业集聚", detail: "政府产业基金GP遴选；济南市财投基金控股集团（市级国资平台）拟联合市场化机构设立高端装备制造与新材料产业基金，促进相关领域产业集聚区高质量发展；系省会城市国资以子基金/合作机构方式引导社会资本投向先进制造与新材料；数据源：新浪财经/投资界（2026-07-24）", industry: "高端装备制造、新材料", url: "https://finance.sina.com.cn/tech/roll/2026-07-24/doc-iniiwvkm1643964.shtml", urlLabel: "新浪财经" },
+    { date: "2026-07-25", precise: true, cat: "listed", level: "provincial", name: "中天服务（002188.SZ）· 2000万元认购杭州辉光日新三期创投基金", action: "上市公司中天服务公告出资2000万元认购杭州辉光日新三期创业投资基金合伙企业（有限合伙）份额，占比9.9950%，分两期缴付", size: "认购出资2000万元（占基金9.9950%）", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC小额出资；中天服务作为LP参与杭州辉光日新系三期创投基金，落地杭州；出资分两期缴付，尚需完成中基协备案；数据源：巨潮资讯（公告2026-020，董事会2026-07-24/07-25披露）", industry: "创业投资（早期科创）", url: "http://static.cninfo.com.cn/finalpage/2026-07-25/1225440401.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-07-24", precise: false, cat: "gov", level: "provincial", name: "深圳市重大产业生态发展基金 · 100亿元设立（首期39.4亿元）", action: "深圳设立深圳市重大产业生态发展基金，总规模100亿元，首期到位39.4亿元（不足总规模40%），投向20+8战略性新兴产业与未来产业集群", size: "总规模100亿元（首期39.4亿元）", fbType: "soft", fbText: "返投深圳", detail: "政府产业基金新设；系深圳&ldquo;三个100亿&rdquo;资本矩阵之一（另含100亿人工智能与机器人产业基金、超100亿生物医药引导基金）；聚焦20+8产业集群与重大产业生态构建，服务硬科技/先进制造招引落地；数据源：投中网/投资界LP周报（2026-07-24/07-25）", industry: "20+8战略性新兴产业与未来产业", url: "https://news.pedaily.cn/202607/566802.shtml", urlLabel: "投资界" },
+    { date: "2026-07-23", precise: true, cat: "listed", level: "provincial", name: "通宇通讯（002792.SZ）· 1.99亿元LP参设滁州市新质生产力创投基金", action: "上市公司通宇通讯公告作为有限合伙人以自有资金1.99亿元参与设立滁州市新质生产力创业投资合伙企业（有限合伙），认缴占比99.5%", size: "基金总规模2亿元（通宇通讯出资1.99亿元占99.5%，GP安徽国芯创投出资100万占0.5%）", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC大额出资；通宇通讯为通信天线/射频器件龙头；GP为安徽国芯创业投资有限公司；基金存续10年（投资期5年+退出期3年，可延长）；聚焦新质生产力方向，落地安徽滁州；不构成关联交易，尚需完成工商登记及中基协备案；数据源：投资界（原文2026-07-23，董事会2026-07-22审议）", industry: "通信/射频、新质生产力", url: "https://news.pedaily.cn/202607/566793.shtml", urlLabel: "投资界" },
+    { date: "2026-07-22", precise: true, cat: "listed", level: "provincial", name: "盛剑科技（603324.SH）· 1000万元LP认购嘉兴璟冠同途创投合伙企业", action: "上市公司盛剑科技公告作为有限合伙人出资1000万元认购嘉兴璟冠同途股权投资合伙企业（有限合伙）份额，占比17.5408%，出资款已实缴到位", size: "基金认缴总额5701万元（盛剑科技出资1000万，占17.5408%）", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC小额试水出资；盛剑科技为半导体工艺废气治理/湿电子化学品设备商；GP为上海泽壹创业投资有限公司；基金2026-04-22成立，2026-07-21完成工商变更登记且出资款实缴到位，尚未完成中基协备案；系认购进展公告（临2026-038，首次临2026-035于07-08）；数据源：巨潮资讯（2026-07-22披露）", industry: "半导体设备、湿电子化学品", url: "http://static.cninfo.com.cn/finalpage/2026-07-22/1225435032.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-07-25", precise: true, cat: "listed", level: "provincial", name: "剑桥科技（603083.SH）· 8亿元LP参投嘉兴沪江光电产业基金", action: "上市公司剑桥科技公告作为有限合伙人以自有资金8亿元参与投资嘉兴沪江光电产业基金合伙企业（有限合伙），占比99.9988%，基金将纳入公司合并报表", size: "基金规模8亿元（剑桥科技出资8亿元，占99.9988%）", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC大额出资；剑桥科技为光模块/光通信及AI算力光互联龙头，2026-07-24签署《嘉兴沪江光电产业基金合伙企业（有限合伙）之合伙协议》，以近全额LP身份主导设立沪江光电产业基金，卡位光电/光通信/AI算力光互联产业链；不构成关联交易；尚需工商注册及中基协备案；数据源：巨潮资讯（公告临2026-037，2026-07-24签署/07-25披露）", industry: "光电、光通信、AI算力光互联", url: "http://static.cninfo.com.cn/finalpage/2026-07-25/1225441699.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-07-25", precise: true, cat: "listed", level: "provincial", name: "和元生物（688238.SH）· 1亿元参设上海和元弘盛一期创投基金（产业并购/关联交易）", action: "上市公司和元生物公告参与设立产业并购基金——上海和元弘盛一期创业投资合伙企业（有限合伙）进展，投资金额1亿元，构成关联交易", size: "投资金额1亿元（和元弘盛一期创投基金）", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；和元生物为细胞与基因治疗（CGT）CDMO龙头；董事会/股东会2026年2月审议通过，本次为进展公告；基金定位产业并购，围绕CGT/生物医药上下游资产并购整合；尚未完成中基协备案；数据源：巨潮资讯（公告2026-029，2026-07-25披露）", industry: "细胞与基因治疗、生物医药并购", url: "http://static.cninfo.com.cn/finalpage/2026-07-25/1225440958.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-07-24", precise: true, cat: "listed", level: "provincial", name: "市北高新（600604.SH）· 2500万元LP参设上海东证新静界私募基金", action: "上市公司市北高新公告与静安资本、东证资本、刘红共同投资设立上海东证新静界私募投资基金合伙企业（有限合伙），基金总认缴5200万元，公司作为LP认缴2500万元占48.08%", size: "基金总认缴5200万元（市北高新2500万，占48.08%）", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC小额出资；市北高新为上海静安园区开发与科创服务平台；联合上海静安资本+东方证券系东证资本共同设立创投基金，围绕园区科技型企业孵化培育；不构成关联交易，尚需中基协备案；系继07-17参设上海新静普创投基金后再落一子；数据源：巨潮资讯（公告2026-025，2026-07-24披露）", industry: "园区科创、科技型企业早期孵化", url: "http://static.cninfo.com.cn/finalpage/2026-07-24/1225439259.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-07-23", precise: true, cat: "listed", level: "provincial", name: "浪潮信息 AI大模型产业基金", action: "参与设立", size: "1亿元", fbType: "none", fbText: "CVC/上市公司", detail: "浪潮信息(000977)公告与专业机构共同投资，出资约1亿元参设AI大模型方向产业基金，协同AI基础设施赛道", industry: "AI/大模型", url: "http://static.cninfo.com.cn/finalpage/2026-07-23/1225437012.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-07-23", precise: true, cat: "listed", level: "provincial", name: "智微智能 半导体产业基金", action: "参与投资", size: "2090万元", fbType: "none", fbText: "CVC/上市公司", detail: "智微智能(001339)公告与专业投资机构共同投资进展，出资约2090万元参设半导体方向基金，协同边缘计算/嵌入式芯片赛道", industry: "半导体", url: "http://static.cninfo.com.cn/finalpage/2026-07-23/1225436822.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-07-23", precise: true, cat: "listed", level: "national", name: "金开新能 新能源产业基金", action: "对外投资设立", size: "4.5亿元", fbType: "none", fbText: "CVC/上市公司", detail: "金开新能(600821)公告对外投资设立基金暨关联交易，出资约4.5亿元，聚焦新能源/绿电赛道", industry: "新能源", url: "http://static.cninfo.com.cn/finalpage/2026-07-23/1225437645.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-07-23", precise: false, cat: "gov", level: "provincial", name: "深圳重投一号母基金", action: "设立", size: "100亿元", fbType: "soft", fbText: "返投深圳", detail: "深圳重投集团发起设立&ldquo;深圳重投一号母基金&rdquo;，规模100亿元，聚焦硬科技/战略性新兴产业，返投深圳（用户提供内容补录）", industry: "硬科技/战新", url: "", urlLabel: "募资动态" },
+    {
+      date: "2026-07-22", precise: true, cat: "gov", level: "provincial",
+      name: "徐州市天使投资基金 · 公开遴选管理机构（总规模不超10亿元）",
+      action: "江苏徐州市（国盛集团发起）公开遴选徐州市天使投资基金（暂定名）管理机构，总规模不超过10亿元，采用双GP模式，申报截止2026年8月11日",
+      size: "总规模≤10亿元（国盛集团≤7亿/≤70%，管理人≥1%/≥0.1亿，市场化募集≥2.9亿/≥29%）",
+      fbType: "soft", fbText: "返投≥政府实缴",
+      detail: "徐州市产业发展基金管理有限公司/徐州市国盛控股集团发起；双GP运作（国盛集团指定主体任GP，外部管理机构任管理人与执行事务合伙人）；存续期≤20年（投资期8年+退出期12年）；返投：天使基金及子基金投资徐州市项目资金不低于政府实缴出资额（约1倍）；投资方式&ldquo;直投+子基金&rdquo;，对单只子基金认缴≤子基金规模30%；≥80%投早期项目（员工≤200人、资产或年营收≤3000万、首两轮融资或成立≤6年、未上市）；损失容忍率整体≤50%、单项目≤100%；管理机构要求实缴≥1000万、对基金出资≥1%且≥500万、≥5名3年以上经验高管；系国办函[2026]54号新政后地市级&ldquo;耐心资本&rdquo;天使基金新增载体；数据源：投资界（原文2026-07-22）",
+      industry: "徐州市创新创业早期项目（科技成果转化/科技型企业）",
+      url: "https://news.pedaily.cn/202607/566711.shtml",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-07-17", precise: true, cat: "market", level: "provincial",
+      name: "市北高新（600604.SH）· 参设上海新静普创投合伙企业（4500万元）",
+      action: "上市公司市北高新公告参与投资设立上海新静普创业投资合伙企业（有限合伙），基金规模4500万元，市北高新出资近五成",
+      size: "基金规模4500万元（市北高新出资近50%）",
+      fbType: "none", fbText: "CVC/上市公司",
+      detail: "上市公司CVC小额出资；市北高新为上海静安/园区开发与科创服务平台，通过参设创投合伙企业搭建投资孵化体系；聚焦园区内科技型企业早期孵化培育；系上市公司借创投基金卡位早期科创项目的典型结构；数据源：上海证券报/新浪财经（原文2026-07-17）",
+      industry: "科技型企业早期孵化（园区科创）",
+      url: "https://finance.sina.com.cn/roll/2026-07-17/doc-inihzrtq7614542.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-17", precise: true, cat: "market", level: "provincial",
+      name: "环旭电子（601231.SH）· 拟5000万元认购上策兴融基金新增合伙份额",
+      action: "上市公司环旭电子公告拟出资5000万元认购上策兴融部分新增合伙份额（认购私募基金份额）",
+      size: "5000万元（认购新增份额）",
+      fbType: "none", fbText: "CVC/上市公司",
+      detail: "上市公司CVC出资；环旭电子为SiP系统级封装与电子设计制造龙头（日月光集团旗下）；以LP身份认购上策兴融基金新增份额，围绕电子制造/半导体封测产业链协同布局；属小额产业资本卡位；数据源：新浪财经/搜狐（原文2026-07-17）",
+      industry: "电子制造、SiP封装、半导体产业链",
+      url: "http://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=601231&id=12449601",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-17", precise: true, cat: "market", level: "provincial",
+      name: "上海医药（601607.SH）· 3亿元LP参设上海上实生物医药产业私募基金（二期）",
+      action: "上市公司上海医药作为有限合伙人拟出资3亿元参与设立上海上实生物医药产业私募基金合伙企业（有限合伙），即&ldquo;上海生物医药二期基金&rdquo;（公告编号临2026-053）",
+      size: "基金总认缴15亿元（上海医药认缴3亿元，占20%）",
+      fbType: "none", fbText: "CVC/上市公司",
+      detail: "上市公司CVC/关联交易出资；LP结构：上海医药3亿+控股股东上药集团3亿+国投先导4.5亿+浦东引领区/浦东生命科学/国泰君安科创一号各1亿+北京千誉0.8亿+君实生物0.5亿，GP上实资本0.19亿、上实管理咨询0.01亿；存续期8年；聚焦&ldquo;大BD&rdquo;战略，重点投IND至临床Ⅱ期创新化药/生物药/医疗器械FIC/BIC资产，覆盖消化代谢/心脑血管/肿瘤/自免；因GP上实资本及上药集团关联，构成关联交易，尚需工商登记及中基协备案；数据源：巨潮资讯（公告临2026-053）",
+      industry: "创新药、生物药、医疗器械（IND-临床II期）",
+      url: "http://dataclouds.cninfo.com.cn/shgonggao/hsomarket/2026/20260717/015e526fb35b4176ba945657f5af5fca.PDF",
+      urlLabel: "巨潮资讯"
+    },
+    {
+      date: "2026-07-17", precise: true, cat: "market", level: "national",
+      name: "世纪华通/九安医疗/视觉中国 · 联袂做LP出资天津砺思星雀创投基金（曹曦砺思资本）",
+      action: "多家上市公司联袂作为LP出资砺思资本（曹曦）旗下天津砺思星雀创业投资合伙企业（有限合伙）；九安医疗7月17日晚公告拟出资不超1亿元认购基金份额",
+      size: "基金目标认缴约10亿元（一说总认缴4.23亿元）",
+      fbType: "none", fbText: "CVC/上市公司",
+      detail: "上市公司CVC出资；LP结构：世纪华通旗下上海盛趣数盟认缴1.5亿元（占约35.46%，第一大LP）+九安医疗拟出资不超1亿元（占约10%）+视觉中国旗下北京华夏视觉出资1000万元；基金重点投数字科技类计算机及软件技术开发未上市企业；管理人砺思资本（Monolith，2021年由前红杉中国合伙人曹曦与前博裕资本Tim Wang创立），历史布局月之暗面/沐曦股份等；反映产业资本围绕AI/数字科技做市场化GP的LP来源持续活跃；数据源：投资界/新浪财经（九安医疗、世纪华通公告）",
+      industry: "数字科技、计算机软件、AI",
+      url: "https://news.pedaily.cn/202607/566474.shtml",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-07-17", precise: true, cat: "market", level: "provincial",
+      name: "翰博高新（301321.SZ）· 全资子公司1000万元参投青岛精确科启创投基金",
+      action: "上市公司翰博高新（编号2026-044公告）全资子公司海南翰博材料科技联合专业私募机构及多名市场主体，共同出资设立青岛精确科启创业投资基金合伙企业（有限合伙）",
+      size: "基金认缴总规模9606.30万元（翰博子公司认缴1000万元，占10.41%）",
+      fbType: "none", fbText: "CVC/上市公司",
+      detail: "上市公司CVC小额试水出资；翰博高新为光电显示材料企业，通过全资子公司海南翰博材料科技以LP身份参投；基金布局新兴科技赛道；系上市公司借专业GP以小额LP身份卡位前沿科技的典型结构；数据源：新浪财经·投影时代（原文发布时间2026-07-17 22:32）",
+      industry: "新兴科技、光电显示、新材料",
+      url: "https://finance.sina.com.cn/tech/roll/2026-07-17/doc-iniicqkw1521970.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-21", precise: true, cat: "market", level: "national",
+      name: "奥瑞金（002701.SZ）· 拟出资青岛金石文化科技投资基金",
+      action: "上市公司奥瑞金（金属包装龙头）以LP身份参与青岛金石文化科技投资基金合伙企业（有限合伙），10亿元基金",
+      size: "10亿元基金（小额LP观察员席位）",
+      fbType: "none", fbText: "CVC/上市公司",
+      detail: "上市公司CVC出资；偏好与中信系等专业GP合作，以小额LP身份获观察员席位；投资聚焦新消费、智能制造等与包装主业协同领域；资金充裕，战略强调「一体两翼」产业延伸与国际化、44%再生铝布局，注重与核心客户深度资本绑定；数据源：募资动态（用户提供一手内容补录）",
+      industry: "新消费、智能制造、包装生态延伸、再生铝",
+      url: "",
+      urlLabel: "募资动态"
+    },
+    {
+      date: "2026-07-21", precise: true, cat: "market", level: "provincial",
+      name: "罗曼股份（605289.SH）· 拟出资安徽琨山罗曼新创创投基金",
+      action: "上市公司罗曼股份作为LP参与安徽琨山罗曼新创创业投资合伙企业（有限合伙），25亿元基金",
+      size: "25亿元基金LP（含4亿对赌）",
+      fbType: "none", fbText: "CVC/上市公司",
+      detail: "上市公司CVC出资；偏好产业协同型GP，投资聚焦AI算力、数智能源等科技领域；家族控股43%、决策高效；独有「算电融合」与「绿电点亮城市」模式，通过基金投资拓展生态；数据源：募资动态（用户提供一手内容补录）",
+      industry: "AI算力、数智能源、算电融合",
+      url: "",
+      urlLabel: "募资动态"
+    },
+    {
+      date: "2026-07-21", precise: true, cat: "market", level: "provincial",
+      name: "骏鼎达（301538.SZ）· 拟出资深圳宝安新智天使一期创投基金",
+      action: "上市公司骏鼎达作为LP参与深圳宝安新智天使一期创业投资合伙企业（有限合伙），100万元小额试水",
+      size: "100万元试水LP",
+      fbType: "none", fbText: "CVC/上市公司",
+      detail: "上市公司CVC出资；偏好产业协同型GP，通过小额度试水投资验证协同性；投资聚焦先进制造、新材料等与主业协同领域；技术驱动、务实谨慎，夫妻控股60%，采用内生增长与外延并购双轮驱动，积极布局全球化三基地；数据源：募资动态（用户提供一手内容补录）",
+      industry: "先进制造、新材料",
+      url: "",
+      urlLabel: "募资动态"
+    },
+    {
+      date: "2026-07-21", precise: true, cat: "gov", level: "county",
+      name: "马鞍山市数字赋能产业基金 · 公开遴选子基金管理机构",
+      action: "安徽马鞍山市（花山区）数字赋能产业基金合伙企业（有限合伙）面向社会公开遴选子基金管理机构",
+      size: "子基金原则上注册于花山区，存续期≤10年（投资期4年+退出期6年）",
+      fbType: "unk", fbText: "未公开",
+      detail: "花山区国资体系发起，撬动社会资本投向花山区数字经济产业；重点投向新一代信息技术、人工智能、智能制造、数字经济等战略性新兴产业及上下游；子基金原则上注册在花山区（依出资比例情况可注册外地）；系安徽省引导基金体系县区级数字经济专项新增载体；数据源：新浪财经·投资界",
+      industry: "新一代信息技术、人工智能、智能制造、数字经济",
+      url: "https://finance.sina.com.cn/tech/roll/2026-07-21/doc-iniiqefh4941288.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-18", precise: false, cat: "market", level: "national",
+      name: "黑蚁资本 · 美元二期基金完成最终募集（2.25亿美元）",
+      action: "黑蚁资本美元二期基金完成最终募集，规模达2.25亿美元",
+      size: "2.25亿美元",
+      fbType: "none", fbText: "无返投",
+      detail: "市场化美元基金完成最终关闭；黑蚁资本聚焦新消费与数字科技的早期成长投资；在当前美元募资普遍承压环境下逆势完成2.25亿美元关账，属本周市场化募资端亮点；数据源：一级市场周报（07.13-07.19），原文域名(知乎)被egress拦截，日期取自周报窗口",
+      industry: "新消费、数字科技（早期成长）",
+      url: "https://zhuanlan.zhihu.com/p/2062538987001189751",
+      urlLabel: "一级市场周报"
+    },
+    {
+      date: "2026-07-18", precise: false, cat: "market", level: "provincial",
+      name: "砺思资本 · 4.23亿元新基金落子数字科技",
+      action: "砺思资本完成4.23亿元新基金募集，重点布局数字科技赛道，多家上市公司联袂出手做LP",
+      size: "4.23亿元",
+      fbType: "none", fbText: "无返投",
+      detail: "市场化人民币基金；本轮由多家上市公司作为LP联袂出资；砺思资本聚焦数字科技方向的成长期投资；反映产业资本（上市公司）作为市场化GP的LP来源持续活跃；数据源：一级市场周报（07.13-07.19），原文域名(知乎)被egress拦截，日期取自周报窗口",
+      industry: "数字科技",
+      url: "https://zhuanlan.zhihu.com/p/2062538987001189751",
+      urlLabel: "一级市场周报"
+    },
+
+
+
+    {
+      date: "2026-07-17", precise: true, cat: "gov", level: "county",
+      name: "彭州交子满园基金 · 遴选子基金管理人",
+      action: "四川成都彭州市正式发布交子满园基金子基金管理人遴选公告",
+      size: "母基金出资 1%+，要求子基金管理规模 2 亿+",
+      fbType: "soft", fbText: "优先返投",
+      detail: "彭州市（成都下辖县级市）国资体系发起；子基金需聚焦彭州绿色低碳产业；GP 要求：3 名 5 年以上经验团队、历史管理规模超 2 亿元；募资时需已募集 50% 资金；优先返投彭州并提供具体项目清单；团队需具产业背景。属国办函[2026]54号新政下&ldquo;县区级基金精细化&rdquo;典型案例；数据源：投资云",
+      industry: "新材料、新能源、生态环保、现代农业、大健康",
+      url: "https://finance.sina.com.cn/",
+      urlLabel: "投资云"
+    },
+    {
+      date: "2026-07-17", precise: true, cat: "gov", level: "county",
+      name: "南充临江集团 · 南充未来产业投资基金 · 遴选子基金管理人",
+      action: "四川南充市临江新区（临江集团平台）发布未来产业投资基金子基金管理人遴选公告",
+      size: "国企出资，子基金实缴 1000 万+，管理费上限 2%",
+      fbType: "unk", fbText: "未公开",
+      detail: "南充临江新区（南充市辖区级平台）通过临江集团发起；聚焦南充市重点产业发展方向；GP 要求：至少 2 名 3 年以上投资经验人员；募资需突出产业导入能力、政治合规性、提供项目储备清单，争取高层直接沟通；数据源：投资云",
+      industry: "绿色能源、高端装备及战略性未来产业",
+      url: "https://finance.sina.com.cn/",
+      urlLabel: "投资云"
+    },
+    {
+      date: "2026-07-17", precise: true, cat: "gov", level: "provincial",
+      name: "内蒙古自治区涉农产业发展基金 · 遴选子基金管理人",
+      action: "内蒙古自治区涉农产业发展基金面向社会公开发布子基金管理人遴选公告",
+      size: "母基金出资 1 亿元，出资比例 ≤ 50%，管理费上限 2%",
+      fbType: "unk", fbText: "未公开",
+      detail: "内蒙古自治区（省级）发起；聚焦农牧业有机废弃物综合利用产业链；GP 要求：3 名 5 年以上经验高管及相关投资成功案例；出资比例 ≤ 50%，管理费上限 2%；募资需提供可落地项目储备、证明募资能力、报价具竞争力；主题冷门（农牧废弃物）在主流财经媒体未获报道；数据源：投资云",
+      industry: "农牧业有机废弃物综合利用产业链",
+      url: "https://finance.sina.com.cn/",
+      urlLabel: "投资云"
+    },
+    {
+      date: "2026-07-18", precise: true, cat: "market", level: "national",
+      name: "投中网LP周报 · 本周新增12+条LP动态 · 合肥50亿基金再出手",
+      action: "投中网发布LP周报（7/18）汇总本周12+条LP动态：合肥产投兴质新域股权基金（50亿）落地、湖南金芙蓉+达晨30亿未来产业创投基金、河南豫铁智算基金锁定紫光计算机、厦门润信昭德10亿基金、宁夏/浙江正在遴选GP等",
+      size: "12+条LP动态",
+      fbType: "none", fbText: "行业周报",
+      detail: "涵盖新基金/招GP两大板块：合肥、南京、湖南、厦门、河南等地国资持续活跃；中信建投资本+北京昭德10亿创投基金聚焦Pre-IPO；达晨财智联合湖南财信设立30亿金芙蓉未来产业基金；产业链主型企业成为LP筛选GP新硬指标（浙江富浙绍芯50亿二轮遴选强调此项）",
+      industry: "综合（新质生产力/AI/智算/新材料/文旅/未来产业）",
+      url: "https://www.chinaventure.com.cn/news/80-20260718-392347.html",
+      urlLabel: "投中网"
+    },
+    {
+      date: "2026-07-13", precise: true, cat: "market", level: "provincial",
+      name: "厦门润信昭德股权投资基金 · 10亿元中基协完成备案",
+      action: "由中信建投资本管理有限公司联合北京昭德投资集团发起设立的厦门润信昭德股权投资基金合伙企业（有限合伙）于2026年7月13日在中基协完成备案，基金规模10亿元",
+      size: "10亿元",
+      fbType: "none", fbText: "无返投",
+      detail: "基金管理人：中信建投资本；重点投资于成长期及Pre-IPO项目；投资方向覆盖新一代信息技术、集成电路、人工智能、高端装备制造、军工科技、航空航天、低空经济、生物医药、消费等新兴产业与未来产业；中信建投资本布局遍及山西/山东/杭州/福州/苏州/四川等地；昭德投资为北京民营性投资控股企业集团首次进入新兴产业创投",
+      industry: "新一代信息技术/集成电路/AI/高端装备/低空经济/生物医药",
+      url: "https://www.chinaventure.com.cn/news/80-20260718-392347.html",
+      urlLabel: "投中网LP周报"
+    },
+    {
+      date: "2026-07-15", precise: false, cat: "gov", level: "provincial",
+      name: "湖南省金芙蓉达晨未来产业创业投资基金 · 30亿元成立",
+      action: "湖南省金芙蓉达晨未来产业创业投资基金合伙企业（有限合伙）成立，出资额30亿元人民币",
+      size: "30亿元",
+      fbType: "unk", fbText: "未公开",
+      detail: "执行事务合伙人：深圳市达晨财智创业投资管理有限公司+湖南省财信产业基金管理有限公司；LP包括湖南省金芙蓉产业引导基金、湖南兴湘新兴产业投资基金、湖南省财信精联股权投资等；达晨财智母公司为湖南电广传媒（湖南本地渊源深）；30亿规模在金芙蓉体系中位于前列；聚焦未来产业方向",
+      industry: "未来产业（湖南三高四新战略配套）",
+      url: "https://www.chinaventure.com.cn/news/80-20260718-392347.html",
+      urlLabel: "投中网LP周报"
+    },
+    {
+      date: "2026-07-15", precise: false, cat: "gov", level: "provincial",
+      name: "河南省豫铁智算私募股权基金 · 首笔投资锁定紫光计算机",
+      action: "河南省豫铁智算私募股权投资基金合伙企业（有限合伙）成立；首笔投资以1.79亿元溢价认购紫光计算机约1.49亿元新增注册资本",
+      size: "首笔1.79亿元（增资紫光计算机）",
+      fbType: "unk", fbText: "未公开",
+      detail: "由河南省铁路建设投资集团有限公司等共同出资；非盲池基金；增资完成后河南铁建投系与郑州高新产投合计持股紫光计算机超34.5%，成为最大外部股东；意图通过控股链主企业为河南算力产业版图重新定调；系河南省国资在AI+算力方向的关键卡位",
+      industry: "算力/AI基础设施",
+      url: "https://www.chinaventure.com.cn/news/80-20260718-392347.html",
+      urlLabel: "投中网LP周报"
+    },
+    {
+      date: "2026-07-15", precise: false, cat: "market", level: "county",
+      name: "北京中发海创原生引擎创业投资基金 · 5亿元成立（海淀）",
+      action: "北京中发海创原生引擎创业投资基金中心（有限合伙）成立，出资额5亿元",
+      size: "5亿元",
+      fbType: "none", fbText: "无返投",
+      detail: "执行事务合伙人：北京中关村创业投资发展有限公司+中关村原生引擎（北京）科技有限公司；LP包括北京中关村科学城四期科技成长股权投资合伙企业（80亿科技成长基金）、北京中关村资本、中关村原生引擎等；&ldquo;原生引擎&rdquo;定位挖掘从0到1的原创性技术；海淀汇聚北大清华等37所高校、92家全国重点实验室、96家国家级科研院所，两院院士总数占全国近半；系海淀早期硬科技投资新载体",
+      industry: "原创技术/早期硬科技（AI/量子/生命科学等）",
+      url: "https://www.chinaventure.com.cn/news/80-20260718-392347.html",
+      urlLabel: "投中网LP周报"
+    },
+    {
+      date: "2026-07-15", precise: false, cat: "gov", level: "provincial",
+      name: "南京云枢文旅强链并购股权投资基金 · 5亿元实缴到账",
+      action: "南京云枢文旅强链并购股权投资基金（有限合伙）正式进入实质性运作阶段；总认缴规模5亿元、首期实缴出资1亿元已于2026年7月6日全额到账",
+      size: "5亿元（首期实缴1亿元）",
+      fbType: "unk", fbText: "未公开",
+      detail: "由南京市文旅集团、南京商旅、南京市创新投及高新创投等南京市、区属国资联合发起；定位&ldquo;文旅专项强链并购&rdquo;；核心投向包括产业链并购重组、存量资产盘活及优质业态股权投资；以南京为主要投资区域，辐射长三角并延伸全国；系六朝古都南京做大文旅龙头企业的产业整合抓手",
+      industry: "文旅（并购重组/存量资产盘活/优质业态）",
+      url: "https://www.chinaventure.com.cn/news/80-20260718-392347.html",
+      urlLabel: "投中网LP周报"
+    },
+    {
+      date: "2026-07-15", precise: false, cat: "market", level: "provincial",
+      name: "苏州鑫算产业投资合伙企业 · 1亿元（协鑫能科旗下）",
+      action: "苏州鑫算产业投资合伙企业（有限合伙）成立，出资额1亿元",
+      size: "1亿元",
+      fbType: "none", fbText: "CVC/上市公司",
+      detail: "执行事务合伙人：宁波梅山保税港区鑫能股权投资基金管理有限公司；由协鑫能科（清洁能源运营与综合能源服务上市公司）旗下协鑫智慧能源（苏州）+鑫能股权投资共同出资；2023年协鑫能科已在苏州建成能源智算平台总部；系围绕能源智算主业的&ldquo;资本探头&rdquo;，用于提前锁定优质项目",
+      industry: "清洁能源/能源智算",
+      url: "https://www.chinaventure.com.cn/news/80-20260718-392347.html",
+      urlLabel: "投中网LP周报"
+    },
+    {
+      date: "2026-07-15", precise: false, cat: "gov", level: "provincial",
+      name: "南京诚之材股权投资合伙企业 · 央地国资联合出资（约1.12亿元）",
+      action: "南京诚之材股权投资合伙企业（有限合伙）成立，出资额约1.12亿元",
+      size: "约1.12亿元",
+      fbType: "unk", fbText: "未公开",
+      detail: "LP：中国国有企业混合所有制改革基金（央企层面战略资本）+合肥建汇战新股权投资基金（合肥国资战新产业主力）等；系国家队与合肥战新基金的又一次握手；虽然基金规模小但背景不小；反映国资通过联合投资方式在关键领域形成合力",
+      industry: "战略性新兴产业（央地国资联合）",
+      url: "https://www.chinaventure.com.cn/news/80-20260718-392347.html",
+      urlLabel: "投中网LP周报"
+    },
+
+
+    {
+      date: "2026-07-17", precise: true, cat: "market", level: "national",
+      name: "投资界LP周报 · 本周（7月11日-17日）LP动态23起 · 上海国资拟投君联资本",
+      action: "投资界LP周报汇总本周23起LP动态：上海未来产业基金拟出资君联资本参与设立的深圳君联君智创投基金；世纪华通、视觉中国等上市公司做LP；泰康双基金完成备案（40亿）等",
+      size: "23起LP动态",
+      fbType: "none", fbText: "行业周报",
+      detail: "综述本周新基金设立/上市公司做LP/引导基金出资/管理办法与政策等23起LP动态；上海未来产业基金新增拟出资2只子基金（上海海聚英才一期+深圳君联君智）；央地国资出资节奏保持活跃；市场化机构募资端仍有分化",
+      industry: "综合（硬科技/AI/新能源/文旅/半导体）",
+      url: "https://news.pedaily.cn/202607/566491.shtml",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-07-17", precise: true, cat: "market", level: "provincial",
+      name: "上汽集团等 · 苏州中金上汽贰期新兴产业基金（约47亿元）",
+      action: "苏州中金上汽贰期新兴产业基金合伙企业（有限合伙）成立，出资额约47亿元",
+      size: "约47亿元",
+      fbType: "none", fbText: "CVC/上市公司",
+      detail: "上汽集团（600104）旗下青岛上汽创新升级产业股权投资基金合伙企业等共同持股；中金资本联合上汽集团设立的贰期基金；聚焦新能源汽车产业链、智能网联、汽车电子等赛道；系上汽集团CVC体系持续扩表；A股上市公司CVC热度上半年已超2.75万亿元",
+      industry: "新能源汽车产业链、智能网联、汽车电子",
+      url: "https://www.stcn.com/article/detail/4024720.html",
+      urlLabel: "证券时报"
+    },
+    {
+      date: "2026-07-17", precise: true, cat: "gov", level: "provincial",
+      name: "湖南昆仑国创金芙蓉先进材料产业基金 · 10亿元落地",
+      action: "湖南昆仑国创金芙蓉先进材料产业基金合伙企业（有限合伙）成立，出资额10亿元",
+      size: "10亿元",
+      fbType: "unk", fbText: "未公开",
+      detail: "执行事务合伙人：中油昆仑（北京）私募基金管理有限公司+株洲市国投创新创业投资有限公司；央企CVC（中石油昆仑）与地方国资（株洲市国投）联合出资架构；聚焦先进材料产业方向；系湖南金芙蓉引导基金体系下新增子基金；配合湖南三高四新战略与株洲先进制造业集群",
+      industry: "先进材料（新材料/复合材料/高端制造材料）",
+      url: "https://finance.sina.com.cn/jjxw/2026-07-17/doc-iniiccvc8179123.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-17", precise: true, cat: "gov", level: "provincial",
+      name: "四川新能源并购基金 · 10亿元签约（成都交投+杭州碧澄+洛能）",
+      action: "成都交通投资集团、成都濛江投资集团、杭州碧澄能源发展、洛能股权投资四方签约设立总规模10亿元的新能源并购基金",
+      size: "10亿元",
+      fbType: "unk", fbText: "未公开",
+      detail: "地方国资（成都交投+濛江投资）联合市场化能源产业投资机构（碧澄能源+洛能股权）；聚焦新能源产业并购整合与项目投资；系四川省内新能源产业并购型基金落地；配合成都碳中和战略与新能源产业布局；系近月来跨省国资/民资联合能源并购的典型案例",
+      industry: "新能源产业（光伏/储能/风电/氢能并购）",
+      url: "https://finance.sina.com.cn/jjxw/2026-07-17/doc-iniiaxpe1431544.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-16", precise: true, cat: "gov", level: "provincial",
+      name: "合肥产投兴质新域股权投资基金 · 50亿元成立",
+      action: "合肥产投兴质新域股权投资合伙企业（有限合伙）成立，出资额50亿元",
+      size: "50亿元",
+      fbType: "unk", fbText: "未公开",
+      detail: "执行事务合伙人：合肥产投资本创业投资管理有限公司；合肥市国资体系发起的新质生产力主题股权基金；聚焦新兴产业与前沿科技方向（新型显示/集成电路/新能源/生物医药/人工智能等合肥重点产业）；系合肥继高新集团/建投集团/滨湖投资后又一支50亿级产业基金落地；预计后续将以直投+参股子基金方式配置",
+      industry: "新兴产业（新型显示/IC/新能源/生物医药/AI）",
+      url: "https://www.nbd.com.cn/articles/2026-07-15/4473389.html",
+      urlLabel: "每经网"
+    },
+    {
+      date: "2026-07-15", precise: true, cat: "gov", level: "provincial",
+      name: "浙江省级50亿元集成电路产业基金 · 富浙绍芯启动二轮遴选",
+      action: "浙江富浙绍芯集成电路产业基金合伙企业启动第二轮子基金管理机构公开遴选",
+      size: "50亿元",
+      fbType: "unk", fbText: "未公开",
+      detail: "基金管理人分为产业/科研类管理人（I类：产业链主型企业/科研院所类机构或其关联方持有GP部分股权并已实缴、且在拟设子基金出资比例不低于20%；II类：为GP控股股东或实际控制人）与收益类管理人；产业链主型企业限定为数字安防与网络通信、集成电路、智能光伏、高端软件等行业上市公司；系浙江省二轮征集，突出产业协同与生态耦合",
+      industry: "集成电路（IC设计/设备材料/第三代半导体）",
+      url: "https://finance.sina.com.cn/jjxw/2026-07-13/doc-inihrxce8970257.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-15", precise: true, cat: "gov", level: "national",
+      name: "云南省科创股权投资母基金管理暂行办法（征求意见稿）",
+      action: "云南省科技厅发布《云南省科创股权投资母基金管理暂行办法（征求意见稿）》，面向社会公开征求意见",
+      size: "—",
+      fbType: "unk", fbText: "政策文件",
+      detail: "云南省科创股权投资母基金管理框架确立；后续将根据征求意见稿正式发文并启动母基金/子基金GP遴选；系云南省新一轮政府投资基金体系升级信号；配合国办函[2026]54号私募基金高质量发展指导意见，向西南地区落地",
+      industry: "科创（云南省重点产业方向）",
+      url: "https://news.pedaily.cn/202607/566345.shtml",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-07-14", precise: true, cat: "gov", level: "provincial",
+      name: "长飞江城智能创投基金 · 5亿元落地武汉江岸",
+      action: "长飞光纤等联合湖北多地国资在武汉江岸区成立长飞江城智能创投基金，注册规模5亿元",
+      size: "5亿元",
+      fbType: "unk", fbText: "未公开",
+      detail: "长飞光纤（A股+H股上市，光通信龙头）CVC联合湖北多地国资；聚焦智能网联/AI通信/光电子等长飞主业相关的科技方向；系上市公司CVC与地方国资协同的典型案例；配合武汉光谷+江岸区科创产业布局；系长飞光纤系近期活跃的LP动作之一",
+      industry: "智能网联、AI通信、光电子",
+      url: "https://finance.eastmoney.com/a/202607143805295637.html",
+      urlLabel: "东方财富"
+    },
+    {
+      date: "2026-07-14", precise: true, cat: "gov", level: "provincial",
+      name: "南京紫金山国际科创基金街区 · 200亿长钱生态大会",
+      action: "2026紫金山国际科创基金街区生态大会举办，200亿元长钱资金集中签约、多支子基金及创投基金落地",
+      size: "合计约200亿元长钱资金",
+      fbType: "unk", fbText: "未公开",
+      detail: "南京市政府主办，集中签约超200亿元科创资本；覆盖硬科技、AI、生命健康等赛道；标志南京紫金山科创基金街区成为长三角新兴基金集聚区；系南京市推进科创金融生态建设的关键节点；后续将陆续发布子基金GP遴选公告",
+      industry: "硬科技、AI、生命健康、高端装备",
+      url: "https://www.nanjing.gov.cn/zt/njjkdzznzzsjbydzyfzxzscl/zdgz/202607/t20260714_5876755.html",
+      urlLabel: "南京市政府"
+    },
+    {
+      date: "2026-07-14", precise: true, cat: "market", level: "national",
+      name: "母基金研究中心 · 257家母基金上半年出资近430亿元",
+      action: "母基金研究中心发布H1 2026成绩单：257家活跃母基金共出资近430亿元，投向200多家GP",
+      size: "H1 2026合计出资约430亿元",
+      fbType: "none", fbText: "行业综述",
+      detail: "涵盖政府引导基金/国资母基金/市场化母基金/CVC等；平均单笔出资规模较2025年同期回升；活跃母基金数量同比增加；出资高度集中于硬科技、AI、半导体、生物医药、新能源等赛道；返投宽松趋势明显，多地引导基金返投倍数已降至1倍或以下；市场化母基金份额有所回升，反映LP结构性变化",
+      industry: "综合（硬科技/AI/半导体/生物医药）",
+      url: "https://finance.sina.com.cn/tech/roll/2026-07-14/doc-inihunry8466350.shtml",
+      urlLabel: "新浪科技"
+    },
+    {
+      date: "2026-07-14", precise: true, cat: "ins", level: "national",
+      name: "险资年内密集参设股权投资基金 · 布局AI/半导体（证券日报/央广/新浪联合覆盖）",
+      action: "证券日报、央广网、新浪财经等权威媒体联合报道：险资年内密集参设股权投资基金，重点布局AI、半导体等硬科技领域",
+      size: "—",
+      fbType: "none", fbText: "无返投",
+      detail: "国办函[2026]54号后险资长钱转向硬科技的持续验证；国寿、太保、平安、人保等主要保险公司年内已参与设立/出资多支PE基金；单只基金规模普遍50-300亿元；覆盖AI大模型/半导体设计设备材料/新能源/战新并购等方向；反映险资从二级市场高股息向一级市场硬科技扩容",
+      industry: "AI/半导体/新能源/战新并购",
+      url: "https://finance.sina.com.cn/stock/zldx/2026-07-14/doc-inihsuhp7444059.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-14", precise: true, cat: "gov", level: "provincial",
+      name: "榆林市科创母基金 · 首批子基金管理机构遴选公告",
+      action: "陕西榆林市科创母基金发布首批子基金管理机构公开遴选公告",
+      size: "未单独披露",
+      fbType: "unk", fbText: "未公开",
+      detail: "榆林市国资体系发起，长安汇通/陕西省政府投资引导基金体系背景；系陕西省引导基金体系下地市级新增载体；面向社会公开征集子基金GP；聚焦榆林市战略性新兴产业与科技创新方向；配合陕西省2026年度母/子基金征集节奏；具体子基金规模、返投比例、申报截止日以正式遴选办法为准",
+      industry: "榆林市战略性新兴产业与科创方向（新能源/新材料/装备制造等）",
+      url: "https://news.pedaily.cn/202607/566318.shtml",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-07-14", precise: true, cat: "gov", level: "provincial",
+      name: "四川省农产品加工子基金 · 招GP（50亿元）",
+      action: "四川省农产品加工子基金发布管理机构公开遴选公告，规模50亿元",
+      size: "50亿元",
+      fbType: "unk", fbText: "未公开",
+      detail: "四川省级引导基金体系下农业专项子基金；聚焦农产品加工全产业链（种业/精深加工/冷链物流/预制菜等）；面向社会公开征集GP；系四川省2026年度产业基金体系新增载体；具体返投比例及申报截止日以正式遴选办法为准",
+      industry: "农产品加工全产业链（种业、精深加工、冷链、预制菜）",
+      url: "https://finance.sina.com.cn/wm/2026-07-14/doc-inihunsa5273069.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-14", precise: true, cat: "gov", level: "provincial",
+      name: "四川省文旅融合子基金（一期）· 管理机构申报制遴选公告",
+      action: "四川省文旅融合子基金一期发布管理机构申报制遴选公告",
+      size: "未单独披露",
+      fbType: "unk", fbText: "未公开",
+      detail: "四川省级引导基金体系下文旅专项子基金；采用申报制遴选方式（滚动决策）；聚焦文旅融合产业（景区数智化/文创演艺/研学/非遗/低空文旅等）；配合四川省从文旅资源大省向产业强省转型战略；具体规模、返投比例、申报截止日以正式遴选办法为准",
+      industry: "文旅融合（景区数智化、文创演艺、研学、非遗、低空文旅）",
+      url: "https://finance.sina.com.cn/tech/roll/2026-07-14/doc-inihunry8443271.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-14", precise: true, cat: "gov", level: "provincial",
+      name: "安庆市产业发展母基金 · 管理机构遴选公告",
+      action: "安徽安庆市正式发布产业发展母基金管理机构遴选公告，面向社会公开征集",
+      size: "未单独披露",
+      fbType: "unk", fbText: "未公开",
+      detail: "安庆市国资体系发起；采用公开遴选方式选聘母基金管理机构；候选参选主体涉及安天利等本地机构；系安徽省引导基金体系在地市级的新增载体；聚焦安庆市战略性新兴产业与产业升级；后续将陆续发布子基金GP征集公告",
+      industry: "安庆市战略性新兴产业（新能源汽车/化工新材料/生命健康等）",
+      url: "https://finance.sina.com.cn/tech/roll/2026-07-14/doc-inihunsf7991801.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-13", precise: true, cat: "gov", level: "provincial",
+      name: "上海大零号湾产投基金 · 第一批基金管理机构公开遴选结果公示",
+      action: "上海大零号湾产投基金发布第一批基金管理机构公开遴选结果公示",
+      size: "未单独披露",
+      fbType: "unk", fbText: "未公开",
+      detail: "上海闵行区国资系（大零号湾）产投基金；面向大零号湾科创集聚区产业布局；本次公示为首批GP遴选结果确认阶段；候选参选单位名单于公示期内可提异议；标志上海市区级产业基金体系向创新集聚区下沉；系闵行区服务上海三大先导产业与硬科技生态的关键载体",
+      industry: "硬科技（大零号湾集聚区方向：AI/生物医药/集成电路/高端装备）",
+      url: "https://finance.sina.com.cn/tech/roll/2026-07-13/doc-inihrxcc2196421.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-13", precise: true, cat: "ins", level: "national",
+      name: "险资加码半导体 · 中国人寿50亿基金二度权威报道",
+      action: "多家券商及权威财经媒体转发解读：中国人寿拟出资50亿元设立半导体股权投资基金，龙头险企正式入场硬科技赛道",
+      size: "50亿元（属前述基金后续报道）",
+      fbType: "none", fbText: "无返投",
+      detail: "华泰、中信建投等券商研报同步：龙头险企拟出资近50亿元加码半导体，被视为国办函[2026]54号新政后险资长钱转向硬科技的标志性动作；相关半导体主题ETF出现资金入场；国寿投资体系年内已多次布局半导体产业链",
+      industry: "半导体产业链",
+      url: "https://finance.sina.com.cn/wm/2026-07-13/doc-inihrsvf2251927.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-10", precise: true, cat: "ins", level: "national",
+      name: "北京泰康投资 · 泰康嘉丰母基金 + 泰康嘉丰产业整合基金双备案（合计40亿）",
+      action: "北京泰康投资（泰康资产旗下）发起设立的泰康嘉丰母基金与泰康嘉丰产业整合基金同日完成中基协备案，两基金在中国银行保险资产管理业协会注册规模合计40亿元",
+      size: "合计40亿元（母基金20亿+产业整合基金20.01亿）",
+      fbType: "none", fbText: "无返投",
+      detail: "① 泰康嘉丰母基金：注册20亿、首期认缴15.01亿，落地福建宁德；系公司第二期母基金，围绕硬科技/大健康主题投优秀创投与股权基金，二期在一期PSD策略上进一步深入产业链；② 泰康嘉丰产业整合基金：注册及认缴20.01亿，落地江苏无锡梁溪区，联合产业链龙头与头部并购基金，聚焦医疗/科技并购整合与成熟业务收购；③ 北京泰康投资2016年成立、管理规模已超百亿元，&ldquo;母基金+成长+并购&rdquo;多策略与&ldquo;硬科技+大健康&rdquo;双赛道矩阵成形；④ 系国办函[2026]54号新政后险资长钱布局硬科技/大健康并延伸至并购策略的又一标志案例",
+      industry: "硬科技、大健康、医疗与科技并购",
+      url: "https://mp.weixin.qq.com/s/cJcThhLq4aecLoiH3E8jZw",
+      urlLabel: "泰康资产"
+    },
+    {
+      date: "2026-07-10", precise: true, cat: "gov", level: "provincial",
+      name: "宁夏创业投资基金 · 子基金公开招募GP",
+      action: "宁夏回族自治区创业投资基金面向社会公开征集子基金管理机构",
+      size: "未单独披露",
+      fbType: "unk", fbText: "未公开",
+      detail: "宁夏回族自治区级政府引导基金体系发起；采用公开征集方式选聘子基金GP；面向全国机构开放申报；聚焦宁夏地方重点产业方向；配合西北地区创投生态建设及&ldquo;东数西算&rdquo;等国家战略；具体规模、返投比例及申报截止日以正式遴选办法为准",
+      industry: "宁夏区域重点产业（清洁能源/新材料/装备制造/东数西算等）",
+      url: "https://finance.sina.com.cn/tech/roll/2026-07-10/doc-inihhvki5194310.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-10", precise: true, cat: "ins", level: "national",
+      name: "中国人寿 · 50亿元半导体股权投资基金",
+      action: "中国人寿拟出资50亿元（49.99亿元）设立股权投资基金，重点投资半导体产业链公司",
+      size: "50亿元",
+      fbType: "none", fbText: "无返投",
+      detail: "中国人寿保险股份有限公司作为险资出资主体；系国寿系战新专项母基金体系再扩容；聚焦半导体设计/设备/材料等硬科技领域；反映险资长钱在国办函[2026]54号新政后加速向科创股权基金倾斜；国寿投资资产总规模已达7.55万亿元；此次为&ldquo;耐心资本&rdquo;在硬科技赛道的典型落地案例",
+      industry: "半导体产业链（设计/设备/材料）",
+      url: "https://finance.sina.com.cn/roll/2026-07-10/doc-inihinfu7055648.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-10", precise: true, cat: "gov", level: "county",
+      name: "镇江高新生产力产业基金 · 公开遴选GP",
+      action: "江苏镇江高新生产力产业基金正式面向社会公开遴选子基金管理机构",
+      size: "未单独披露",
+      fbType: "unk", fbText: "未公开",
+      detail: "镇江高新区国资体系发起；重点聚焦半导体领域及新质生产力先进制造方向；系江苏省战略性新兴产业母基金体系下地市级承接载体；GP申报采公开征集方式；具体规模、返投比例及申报截止日以正式遴选办法为准",
+      industry: "半导体、先进制造（新质生产力方向）",
+      url: "https://finance.sina.com.cn/tech/roll/2026-07-10/doc-inihifxz8423938.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-09", precise: true, cat: "gov", level: "county",
+      name: "佛山市安昇基金 · 子基金GP遴选公告",
+      action: "佛山市南海区国资系安昇基金正式发布子基金管理人公开遴选公告",
+      size: "未单独披露",
+      fbType: "unk", fbText: "未公开",
+      detail: "继佛山首支国家实验室基金及首支AIC基金后再启新一轮遴选；面向社会公开征集子基金管理机构；聚焦南海区&ldquo;两高四新&rdquo;现代产业体系；具体规模、返投比例以正式遴选办法为准；属佛山南海国资基金体系近月来第三轮GP招募",
+      industry: "南海区两高四新（高技术制造/高质量服务/新一代信息技术/新能源等）",
+      url: "https://finance.sina.com.cn/jjxw/2026-07-09/doc-inihenaz1444185.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-07", precise: true, cat: "market", level: "national",
+      name: "云意电气 · 联合设立1亿元产业基金（上市公司CVC）",
+      action: "A股汽车零部件上市公司云意电气发布公告：拟联合设立1亿元产业基金，加速产业布局与竞争力提升",
+      size: "1亿元",
+      fbType: "none", fbText: "无返投",
+      detail: "上市公司CVC联合出资模式；聚焦公司主业相关领域（汽车电子/新能源）产业链投资；据财闻网口径，2026年上半年A股上市公司CVC投资合计已超2.75万亿元；反映产业资本对硬科技供应链整合的持续加码；小额CVC是近期发行公告的常见结构",
+      industry: "汽车电子、新能源产业链",
+      url: "https://finance.sina.com.cn/stock/aigc/tzxm/2026-07-07/doc-inifyvat1581113.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-04", precise: true, cat: "gov", level: "provincial",
+      name: "重庆永川产业母基金 · 首期30亿元对外发布",
+      action: "重庆永川区正式对外发布产业母基金，首期规模30亿元",
+      size: "首期30亿元",
+      fbType: "unk", fbText: "未公开",
+      detail: "重庆永川区国资系产业母基金；以设立子基金及关联直投为主要方式；配合成渝双城经济圈及重庆两江协同发展战略；后续预计陆续发布子基金GP遴选公告；系重庆区县级母基金体系新增载体",
+      industry: "永川区重点产业（智能网联/大数据/装备制造）",
+      url: "https://news.qq.com/rain/a/20260704A02PR100",
+      urlLabel: "腾讯新闻"
+    },
+
+    {
+      date: "2026-07-06", precise: true, cat: "gov", level: "national",
+      name: "国办函[2026]54号文实施满月 · 县区引导基金进入&ldquo;集约化&rdquo;时代",
+      action: "证券时报解读：新规实施一个月，全国县区级政府投资基金格局深刻变化，多地暂停新设、压缩存量出资额度",
+      size: "—",
+      fbType: "none", fbText: "监管收紧",
+      detail: "华南某300亿AUM VC反馈过半LP来自县区引导基金，新规后基本停摆；福建某省属国资透露新规后十余天当地工商系统无法办理经营范围含&ldquo;私募基金&rdquo;的营业执照；备案与工商登记门槛提高，AMAC备案、工商注册、地方金融办前置审批多层叠加；县区基金核心界定：县区财政/区属企业是否为主要出资人+设立决策/投资要求/返投规则是否由县区决定；对小型VC影响最大，倒逼GP募资策略转型",
+      industry: "—",
+      url: "https://finance.sina.com.cn/jjxw/2026-07-06/doc-inifutnr2003352.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-06", precise: true, cat: "gov", level: "provincial",
+      name: "湖北省长江智造产业投资基金 · GP遴选结果公示",
+      action: "湖北省投资引导基金公示湖北省长江智造产业投资基金（暂定名）为拟参股子基金，国寿资本投资有限公司担任管理机构",
+      size: "未单独披露",
+      fbType: "mid", fbText: "返投1.2倍",
+      detail: "国寿投资旗下国寿资本首次担任湖北引导基金子基金管理机构；受托管理机构为中金资本运营；主要投向光电子信息、新能源与智能网联汽车、高端装备等；返投湖北项目金额不低于省引导基金实缴出资额的1.2倍；系4月18日国寿投资与长江产业集团战略合作协议落地成果",
+      industry: "光电子信息、新能源与智能网联汽车、高端装备",
+      url: "https://news.pedaily.cn/202607/565892.shtml",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-07-06", precise: true, cat: "gov", level: "provincial",
+      name: "福建省人工智能产业基金 · 常态化子基金遴选结果",
+      action: "福建省金投私募基金管理有限公司公示：福建省悦信鸿毅智能经济股权投资合伙企业（拟）为拟设子基金，厦门悦昇投资管理有限公司担任管理机构",
+      size: "未单独披露",
+      fbType: "unk", fbText: "未公开",
+      detail: "本次遴选采用常态化遴选方式，决策一家公示一家；配合福建省政府办公厅《福建省推动人工智能产业发展和赋能应用若干措施》要求，在省级专精特新基金中设立人工智能子基金；聚焦福建AI产业与智能经济方向",
+      industry: "人工智能、智能经济",
+      url: "https://news.pedaily.cn/202607/565895.shtml",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-07-06", precise: true, cat: "gov", level: "provincial",
+      name: "内蒙古培育重点产业引导基金 · 项目征集",
+      action: "面向社会公开发起项目征集，涵盖直投与子基金两类通道",
+      size: "总规模86.75亿元（自治区财政85亿，放大至140亿+），存续15年（10年投资期+5年退出期）",
+      fbType: "unk", fbText: "未公开",
+      detail: "基金管理人：中财融商（北京）资本管理有限公司（P1015578）；架构：30%直投+70%子基金；子基金分为单一项目基金、特色产业基金、重点区域基金、科技创新投资基金、特殊类型基金；申报截止2026年12月31日；落实自治区&ldquo;两个屏障、两个基地、一个桥头堡&rdquo;定位及&ldquo;1571&rdquo;工作部署",
+      industry: "产业链关键环节、战略性新兴产业、未来产业",
+      url: "https://news.pedaily.cn/202607/565850.shtml",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-07-06", precise: true, cat: "gov", level: "provincial",
+      name: "武汉光谷 · 4只产业专项母基金揭牌",
+      action: "武汉光谷设立4只产业专项母基金集中揭牌，总规模180亿元",
+      size: "合计180亿元",
+      fbType: "unk", fbText: "未公开",
+      detail: "四只母基金精准锚定光电子信息、生命健康、集成电路、未来产业；标志光谷母基金体系向&ldquo;垂直细分产业母基金&rdquo;进阶；预计后续将陆续发布子基金GP遴选公告",
+      industry: "光电子信息、生命健康、集成电路、未来产业",
+      url: "https://news.pedaily.cn/202607/565844.shtml",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-07-06", precise: true, cat: "gov", level: "national",
+      name: "国家创业投资引导基金 · 京津冀基金天津专场签约",
+      action: "由天津市发改委和中金资本主办的国创引导基金京津冀基金天津专场路演对接活动举行，与9只子基金管理机构达成合作意向",
+      size: "9只子基金合作意向",
+      fbType: "none", fbText: "取消返投",
+      detail: "签约方：中资环、泰达科投、天创资本、泰达私募、北极光创投、达泰资本、泓创资本、智汇基金、天津科金；延续京津冀引导基金&ldquo;取消返投、70%投早期&rdquo;基本设定；标志京津冀基金GP遴选进入实质签约阶段",
+      industry: "硬科技（早期）",
+      url: "https://news.pedaily.cn/202607/565844.shtml",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-07-06", precise: true, cat: "gov", level: "provincial",
+      name: "浙江省科创母基金（三期）· 智能物联等5大产业子基金GP征集",
+      action: "浙江金投盛领面向社会公开征集三期子基金管理机构（滚动决策）",
+      size: "单支子基金出资额不高于2亿元且比例不超过40%",
+      fbType: "unk", fbText: "未公开",
+      detail: "重点方向：智能物联、生物医药、高端装备、新材料、绿色能源五大产业生态圈，及AI+制造/能源/医疗/海洋/空天/新材料等；GP要求：至少3名3年以上股权投资经验高管，累计管理创投基金实缴规模不低于5亿元且有3+种子期成功案例；申请方须先自筹目标规模50%以上",
+      industry: "智能物联、生物医药、高端装备、新材料、绿色能源",
+      url: "https://news.pedaily.cn/202607/565894.shtml",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-07-06", precise: false, cat: "gov", level: "provincial",
+      name: "厦门国本国资产业投资基金 · 100亿完成工商注册",
+      action: "厦门国本国资产业投资基金合伙企业（有限合伙）完成注册，出资额100亿元",
+      size: "100亿元",
+      fbType: "unk", fbText: "未公开",
+      detail: "执行事务合伙人：厦门国升发展私募基金管理有限责任公司；由厦门市国资体系发起；聚焦厦门市战略性新兴产业布局",
+      industry: "厦门市战略性新兴产业",
+      url: "https://news.pedaily.cn/202607/565844.shtml",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-07-06", precise: false, cat: "gov", level: "provincial",
+      name: "咸阳工融产投股权投资基金 · 10亿AIC股权基金落地",
+      action: "咸阳工融产投股权投资合伙企业（有限合伙）完成工商注册，规模10亿元",
+      size: "10亿元",
+      fbType: "unk", fbText: "未公开",
+      detail: "陕西省内除西安区域外首支落地的AIC股权基金；标志陕西AIC股权投资体系向地市下沉；属陕西省2026年度政府引导基金体系新增载体",
+      industry: "咸阳市重点产业",
+      url: "https://news.pedaily.cn/202607/565844.shtml",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-07-06", precise: false, cat: "gov", level: "provincial",
+      name: "吉渝氢能产业发展基金 · 20亿签约",
+      action: "吉渝氢能产业发展基金签约仪式在长春举行，总规模20亿元",
+      size: "20亿元",
+      fbType: "unk", fbText: "未公开",
+      detail: "牵头方：吉林产投管理集团；联合出资：重庆江津区、长兴基金、长春新区产投、深圳润土投资及产业链龙头企业等；跨省联动氢能CVC结构；属首支跨吉渝合作的氢能主题产业基金",
+      industry: "氢能产业链",
+      url: "https://news.pedaily.cn/202607/565844.shtml",
+      urlLabel: "投资界"
+    },
+
+    {
+      date: "2026-07-05", precise: true, cat: "gov", level: "provincial",
+      name: "山西省文化旅游产业发展投资基金母基金 · 管理机构预征集",
+      action: "山西产投资本管理有限公司面向社会公开预征集文旅基金母基金管理机构",
+      size: "母基金规模不低于15.01亿元，存续期15年",
+      fbType: "unk", fbText: "未公开",
+      detail: "以设立子基金为主要投资方式；重点投向景区焕新、数智文旅、文创演艺、冰雪旅游、研学旅游、非遗传承等领域及上下游产业；本次为预征集（意向摸排），后续将发布正式遴选公告；GP需已完成AMAC私募股权基金管理人登记、具备政府投资基金管理经验和文旅产业投资案例",
+      industry: "文化旅游（景区、数智文旅、文创演艺、冰雪、研学、非遗）",
+      url: "https://finance.sina.com.cn/tech/roll/2026-07-05/doc-inifuhww8886221.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-02", precise: true, cat: "gov", level: "provincial",
+      name: "海南自贸港创新基金 · 人才创新创业投资基金管理机构征集",
+      action: "海南人才创新创业投资基金面向社会公开选聘子基金管理机构",
+      size: "未单独披露",
+      fbType: "unk", fbText: "未公开",
+      detail: "由海南财金集团及深天使联合发起；申报材料递交截止2026年7月27日；GP须结合海南产业基础、人才条件和政策优势形成完整的投资计划和策略；性质为基金比选公告，非公开招标",
+      industry: "人才创新创业（海南自贸港产业布局）",
+      url: "https://finance.sina.com.cn/tech/roll/2026-07-02/doc-inifmfea0924957.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-01", precise: true, cat: "gov", level: "provincial",
+      name: "武汉城投集团 · 产业投资基金管理人遴选",
+      action: "武汉城投投资发展有限公司发布产业投资基金管理人遴选公告，推进&ldquo;城投+产投&rdquo;转型",
+      size: "总存续期7年（投资期5年+退出期2年，各可延1年）",
+      fbType: "unk", fbText: "未公开",
+      detail: "重点投向信息技术、智能制造、生命健康等方向；优先投资城投集团产业园区内企业；申报截止2026年7月3日17:00（北京时间）；单标的具体规模由GP方案确定",
+      industry: "信息技术、智能制造、生命健康",
+      url: "https://finance.sina.com.cn/tech/roll/2026-07-01/doc-inifhvws0964071.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-07-02", precise: false, cat: "gov", level: "provincial",
+      name: "成都康华生物等 · 四川振兴生物医药产业投资基金",
+      action: "拟与多方共同出资设立四川振兴生物医药产业投资基金，目标规模15亿元，首期认缴12亿元，采用双GP模式",
+      size: "15亿元（首期12亿元）",
+      fbType: "unk", fbText: "未公开",
+      detail: "双GP联合管理架构；聚焦生物医药产业链投资；属四川省战略性新兴产业布局的产业引导基金模式",
+      industry: "生物医药",
+      url: "https://www.nbd.com.cn/articles/2026-06-22/4433207.html",
+      urlLabel: "每经网"
+    },
+    {
+      date: "2026-07-01", precise: true, cat: "gov", level: "county",
+      name: "南京市人才一期发展基金 · 参投玄创毅峰明略AI创新基金",
+      action: "投委会审议通过参投南京玄创毅峰明略人工智能创新基金（暂定名），落地南京玄武区",
+      size: "1亿元，存续期7年",
+      fbType: "unk", fbText: "未公开",
+      detail: "政府引导基金参股子基金模式；主要投向人工智能领域；南京玄武区国资参与设立",
+      industry: "人工智能",
+      url: "https://www.pedaily.cn/",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-07-01", precise: true, cat: "gov", level: "county",
+      name: "南京江北新区高质量发展产业投资基金 · 参投2只子基金",
+      action: "公布拟参股南京数字文化产业发展基金（5000万元）及南京金光江北产业投资基金（10亿元）",
+      size: "合计约10.5亿元",
+      fbType: "unk", fbText: "未公开",
+      detail: "南京数字文化产业基金5000万元；南京金光江北产业投资基金10亿元；面向江北新区主导产业方向布局",
+      industry: "数字文化、区域综合产业",
+      url: "https://www.pedaily.cn/",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-06-30", precise: false, cat: "gov", level: "provincial",
+      name: "江苏无锡集成电路产业专项母基金",
+      action: "公开遴选集成电路产业子基金管理机构（GP征集）；鼓励央企/产业龙头/大型金融机构参与，可适当放宽部分要求",
+      size: "50亿元，存续期15年（投资期8年+退出期7年）",
+      fbType: "unk", fbText: "未公开",
+      detail: "江苏省战略性新兴产业母基金+无锡产发集团+无锡创投集团联合出资；子基金规模不低于5亿（苏南地区不低于10亿）；直投占比不低于70%；聚焦IC设计、EDA、半导体设备材料、第三代半导体、硅光芯片、量子芯片；申报截止后6个月内须完成工商注册",
+      industry: "集成电路（IC设计/半导体设备材料/第三代半导体）",
+      url: "https://news.pedaily.cn/202506/551159.shtml",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-06-26", precise: true, cat: "gov", level: "provincial",
+      name: "湖南省金芙蓉产业引导基金 · 人工智能产业子基金管理机构公示",
+      action: "公示选定AI产业子基金管理机构，完成本轮GP遴选结果公告",
+      size: "未单独披露",
+      fbType: "unk", fbText: "未公开",
+      detail: "湖南省级引导基金金芙蓉体系下设AI专项子基金，由湖南省财信产业基金管理有限公司负责运营；此次公示标志遴选结果确认；聚焦湖南三高四新战略与人工智能产业生态",
+      industry: "人工智能",
+      url: "https://finance.sina.com.cn/jjxw/2026-06-26/doc-inieszrv7376449.shtml",
+      urlLabel: "新浪财经"
+    },
+    {
+      date: "2026-06-25", precise: true, cat: "gov", level: "county",
+      name: "亦庄国投 · 人工智能/集成电路/生命科学/高端制造四大产业投资基金",
+      action: "北京经开区亦庄国投集中成立四只产业投资基金，合计出资额200亿元",
+      size: "四只合计200亿元",
+      fbType: "unk", fbText: "未公开",
+      detail: "覆盖赛道：人工智能、集成电路、生命科学与大健康、高端制造；亦庄国投为出资主体，布局北京经开区产业集群；参设基金65支、总规模近七千亿的亦庄国投再度扩表",
+      industry: "人工智能、集成电路、生命科学、高端制造",
+      url: "https://www.stcn.com/article/detail/3978466.html",
+      urlLabel: "证券时报"
+    },
+    {
+      date: "2026-06-26", precise: true, cat: "ins", level: "national",
+      name: "中国太保 · 太保战新并购私募基金（上海）合伙企业",
+      action: "完成中基协备案（6月24日）；目标规模300亿元、首期100亿元",
+      size: "300亿元（首期100亿）",
+      fbType: "none", fbText: "无返投",
+      detail: "聚焦上海国资国企改革和现代化产业体系；模式：长期资本+并购整合+资源协同",
+      industry: "战新产业并购、强链补链",
+      url: "https://www.stcn.com/article/detail/3610831.html",
+      urlLabel: "证券时报"
+    },
+    {
+      date: "2026-06-24", precise: true, cat: "gov", level: "provincial",
+      name: "上海未来产业基金",
+      action: "投委会审议通过参投2只子基金：上海清科致成、上海前瞻致行",
+      size: "未单独披露",
+      fbType: "unk", fbText: "未公开",
+      detail: "市场化主导的政府基金；参考上海整体政策推断接近1.5倍",
+      industry: "未来产业（合成生物、脑机接口、量子科技）",
+      url: "https://news.pedaily.cn/202606/565548.shtml",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-06-22", precise: false, cat: "gov", level: "provincial",
+      name: "武汉武创未来智能创业投资基金",
+      action: "武汉首支市级AI科创基金正式启动",
+      size: "10亿元",
+      fbType: "unk", fbText: "未公开",
+      detail: "出资方：武创投、武汉基金、湖北省人形机器人母基金",
+      industry: "人工智能、人形机器人",
+      url: "https://www.nbd.com.cn/articles/2026-06-22/4433207.html",
+      urlLabel: "每经网"
+    },
+    {
+      date: "2026-06-17", precise: true, cat: "gov", level: "provincial",
+      name: "中国银河证券 · 黑龙江5亿元创业投资基金",
+      action: "中国银河证券联合黑龙江地方国资成立，规模5亿元",
+      size: "5亿元",
+      fbType: "unk", fbText: "未公开",
+      detail: "券商CVC+地方国资联合出资架构，布局黑龙江省产业振兴；属券商下沉省域创投新模式",
+      industry: "黑龙江重点产业",
+      url: "https://www.stcn.com/article/detail/3965396.html",
+      urlLabel: "证券时报"
+    },
+    {
+      date: "2026-06-17", precise: true, cat: "gov", level: "provincial",
+      name: "陕西社保科创股权投资基金（一期）· 100亿元签约",
+      action: "陕西社保科创股权投资基金（一期）正式签约，首期规模100亿元",
+      size: "首期100亿元",
+      fbType: "unk", fbText: "未公开",
+      detail: "出资结构：全国社保基金40%+银行系AIC中银资产20%+长安汇通/高新金控合计40%；西北首只百亿级社保科创基金；此前社保基金已在浙江、江苏、福建、四川、湖北设立5只科创基金，本只完成社保基金在西北地区战略卡位",
+      industry: "新材料、半导体、航空航天、高端装备制造、新一代信息技术、人工智能",
+      url: "https://news.bjd.com.cn/2026/05/25/11765003.shtml",
+      urlLabel: "京报网"
+    },
+    {
+      date: "2026-06-16", precise: true, cat: "market", level: "provincial",
+      name: "上海科创基金 · 三期关闭超60亿元",
+      action: "三期基金完成最终关闭，总规模超60亿元；九年三期累计管理规模突破200亿元",
+      size: "三期60亿+；一二三期累计约200亿",
+      fbType: "none", fbText: "无返投",
+      detail: "市场化母基金。一期2017年约40亿、二期2020年约100亿、三期2026年60亿+；LP涵盖国资及机构，专注早期科技：AI（智谱、月之暗面等）、半导体、生物医药",
+      industry: "科技创新（AI、硬科技、生物医药）",
+      url: "https://www.chinaventure.com.cn/news/80-20260620-391931.html",
+      urlLabel: "投中网"
+    },
+    {
+      date: "2026-06-16", precise: true, cat: "gov", level: "provincial",
+      name: "贵阳市天使投资引导基金",
+      action: "公开遴选参股子基金管理机构（GP征集）",
+      size: "未单独披露",
+      fbType: "unk", fbText: "未公开",
+      detail: "贵阳市政府系天使投资引导基金；面向全国公开招募早期/天使期子基金GP",
+      industry: "贵阳重点产业（早期/天使）",
+      url: "https://news.pedaily.cn/202606/565266.shtml",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-06-15", precise: false, cat: "market", level: "national",
+      name: "蓝驰创投 · 双币早期基金",
+      action: "完成近40亿元双币基金募集（2026年内最大早期募资）",
+      size: "近40亿元（人民币+美元）",
+      fbType: "none", fbText: "无返投",
+      detail: "市场化双币基金；早期方向（具身智能、大模型）",
+      industry: "早期硬科技",
+      url: "https://www.nbd.com.cn/articles/2026-06-22/4433207.html",
+      urlLabel: "每经网"
+    },
+    {
+      date: "2026-06-11", precise: true, cat: "gov", level: "provincial",
+      name: "黑龙江省创业投资基金",
+      action: "专项母基金公开征集子基金管理机构（GP遴选）",
+      size: "未单独披露",
+      fbType: "unk", fbText: "未公开",
+      detail: "黑龙江省政府系专项创投母基金；面向全国公开招募子基金GP；与龙江现代产业投资引导基金属不同载体",
+      industry: "黑龙江省重点产业",
+      url: "https://news.pedaily.cn/202606/565125.shtml",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-06-11", precise: false, cat: "market", level: "national",
+      name: "长鑫科技+阿里巴巴+中微半导体 · 39.1亿元半导体产业私募基金",
+      action: "三方企业联合出资39.1亿元，设立半导体产业闭合生态私募基金，完成成立",
+      size: "39.1亿元",
+      fbType: "none", fbText: "无返投",
+      detail: "CVC产业基金；长鑫科技（DRAM芯片商，2026年IPO）+阿里巴巴+中微半导体（蚀刻设备龙头）联合出资，聚焦半导体产业链上下游整合，构建产业生态闭环",
+      industry: "半导体产业链（DRAM、蚀刻设备、IC设计）",
+      url: "https://finance.ifeng.com/c/8tr7IqrGS64",
+      urlLabel: "凤凰财经"
+    },
+    {
+      date: "2026-06-05", precise: true, cat: "gov", level: "national",
+      name: "国办函[2026]54号 · 私募基金高质量发展指导意见",
+      action: "国务院办公厅印发，要求因地制宜调整返投相关要求；县级及以下原则上不再新设同类政府投资基金",
+      size: "—",
+      fbType: "none", fbText: "政策面松绑",
+      detail: "已直接推动京津冀取消返投、西安降至1:1、长沙经开区0.4-1倍等改革",
+      industry: "—",
+      url: "https://www.csrc.gov.cn/csrc/c100028/c7637247/content.shtml",
+      urlLabel: "证监会"
+    },
+    {
+      date: "2026-06-02", precise: true, cat: "gov", level: "provincial",
+      name: "陕西省政府投资引导基金 · 2026年度母/子基金征集",
+      action: "发布2026年度征集公告，面向全国公开遴选母基金管理机构及子基金管理机构",
+      size: "未单独披露",
+      fbType: "unk", fbText: "未公开",
+      detail: "省级政府引导基金向全国发出GP遴选；陕西跟进国家投早投小政策；西安市分项已率先将返投降至1:1",
+      industry: "战略性新兴产业、未来产业",
+      url: "https://news.pedaily.cn/202606/564750.shtml",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-06-01", precise: true, cat: "gov", level: "provincial",
+      name: "杭州文化母基金",
+      action: "公开招募子基金GP（管理人征集）",
+      size: "未单独披露",
+      fbType: "unk", fbText: "未公开",
+      detail: "杭州市国资系文化产业母基金；面向全国遴选子基金管理机构",
+      industry: "文化产业",
+      url: "https://news.pedaily.cn/202606/564747.shtml",
+      urlLabel: "投资界"
+    },
+    {
+      date: "2026-05-29", precise: true, cat: "gov", level: "provincial",
+      name: "南京新消费与现代服务业母基金",
+      action: "公开遴选子基金管理机构",
+      size: "20亿元",
+      fbType: "unk", fbText: "未公开",
+      detail: "GP要求：相关产业基金/项目投资总额不低于拟申报子基金规模2倍；已有10个以上该产业IPO退出或IRR不低于20%或3家上市公司或独角兽",
+      industry: "新消费与生活服务、生产性服务业、新业态与平台经济",
+      url: "https://finance.sina.com.cn/tech/roll/2026-05-29/doc-inhzpsps7994564.shtml",
+      urlLabel: "新浪科技"
+    },
+    {
+      date: "2026-05-25", precise: true, cat: "gov", level: "provincial",
+      name: "广东省战略性新兴产业投资引导基金",
+      action: "省委书记、省长出席启动仪式并为基金揭牌；首批7只行业子基金达成合作意向签约，80+机构加入投资联盟",
+      size: "首期500亿/总规模1000亿，不设固定存续期",
+      fbType: "unk", fbText: "未公开",
+      detail: "广东省首支永续经营公司制省级政府投资基金；三级架构：50%投行业子基金、30%投区域母基金、20%直投；优先与产业龙头CVC及优秀市场化GP合作；预计撬动超万亿元基金集群",
+      industry: "战略性新兴产业、未来产业",
+      url: "https://finance.sina.com.cn/wm/2026-05-25/doc-inhzctrh9452819.shtml",
+      urlLabel: "新浪财经"
+    },
+
+
+  ]
+};
+
+const CAT_META = {
+  gov: { label: "政府引导基金/国资母基金", cls: "cat-gov" },
+  market: { label: "市场化母基金", cls: "cat-market" },
+  ins: { label: "险资", cls: "cat-ins" },
+  listed: { label: "上市公司CVC/做LP", cls: "cat-listed" }
+};
+
+let filters = { cat: "all", lvl: "all", window: "90" };
+const TODAY = new Date("2026-09-09");
+const SEVEN_DAYS_AGO = new Date(TODAY); SEVEN_DAYS_AGO.setDate(TODAY.getDate() - 7);
+
+function daysAgo(dateStr) {
+  const d = new Date(dateStr);
+  return Math.floor((TODAY - d) / (1000 * 60 * 60 * 24));
+}
+
+function isRecent7(dateStr, precise) {
+  if (!precise) return false;
+  const d = new Date(dateStr);
+  return d >= SEVEN_DAYS_AGO;
+}
+
+function fmtDate(dateStr, precise) {
+  const [y, m, d] = dateStr.split("-");
+  return { full: `${m}/${d}`, precise };
+}
+
+function getDayLabel(dateStr) {
+  const da = daysAgo(dateStr);
+  if (da === 0) return "今天";
+  if (da === 1) return "昨天";
+  if (da <= 7) return `${da} 天前`;
+  return null;
+}
+
+function passFilter(r) {
+  if (filters.cat !== "all" && r.cat !== filters.cat) return false;
+  if (filters.lvl !== "all" && r.level !== filters.lvl) return false;
+  if (filters.window !== "all") {
+    const da = daysAgo(r.date);
+    if (da > parseInt(filters.window)) return false;
+  }
+  return true;
+}
+
+function render() {
+  document.getElementById("last-updated").textContent = DATA.lastUpdated;
+  const rows = DATA.rows
+    .filter(passFilter)
+    .sort((a, b) => {
+      if (a.date !== b.date) return b.date.localeCompare(a.date);
+      if (a.precise !== b.precise) return a.precise ? -1 : 1;
+      return 0;
+    });
+
+  document.getElementById("visible-count").textContent = "显示 " + rows.length + " 条";
+  const content = document.getElementById("content");
+  if (rows.length === 0) {
+    content.innerHTML = "<div style=\"padding:40px;text-align:center;color:#9a9a9a;\">该筛选下暂无条目</div>";
+    return;
+  }
+
+  const byMonth = {};
+  for (const r of rows) {
+    const ym = r.date.slice(0, 7);
+    (byMonth[ym] = byMonth[ym] || []).push(r);
+  }
+
+  const monthKeys = Object.keys(byMonth).sort().reverse();
+  content.innerHTML = monthKeys.map(ym => {
+    const monthRows = byMonth[ym];
+    const [y, m] = ym.split("-");
+    return "<div class=\"day-header\">" + y + "年" + parseInt(m) + "月 <span class=\"day-meta\">" + monthRows.length + " 条</span></div>" +
+      monthRows.map(r => {
+        const d = fmtDate(r.date, r.precise);
+        const recent7 = isRecent7(r.date, r.precise);
+        const tag = getDayLabel(r.date);
+        return "<div class=\"news-item\">" +
+          "<div class=\"news-date\">" +
+          "<span class=\"" + (r.precise ? "precise" : "approx") + "\">" + d.full + "</span>" +
+          (tag ? "<div class=\"day-ago\">" + tag + "</div>" : "") +
+          (!r.precise ? "<div class=\"approx\">约</div>" : "") +
+          "</div>" +
+          "<div class=\"news-body\">" +
+          "<div class=\"news-meta-row\">" +
+          "<span class=\"cat-tag " + CAT_META[r.cat].cls + "\">" + CAT_META[r.cat].label + "</span>" +
+          "<span class=\"fb fb-" + r.fbType + "\">" + r.fbText + "</span>" +
+          (r.level ? "<span class=\"lvl lvl-" + r.level + "\">" + ({national:"国家级",provincial:"省市级",county:"县区级"}[r.level] || "") + "</span>" : "") +
+          (recent7 ? "<span class=\"star\">★ 近7天</span>" : "") +
+          "</div>" +
+          "<div class=\"news-title\">" + r.name + "</div>" +
+          "<div class=\"news-action\">" + r.action + "</div>" +
+          "<div class=\"news-detail\">" +
+          "<span class=\"kv\"><span class=\"kv-label\">规模：</span>" + r.size + "</span>" +
+          (r.industry && r.industry !== "—" ? "<span class=\"kv\"><span class=\"kv-label\">行业：</span>" + r.industry + "</span>" : "") +
+          "<div class=\"news-detail-body\">" + r.detail + "</div>" +
+          "</div>" +
+          "</div>" +
+          "<div class=\"news-link\">" +
+          (r.url ? "<a href=\"" + r.url + "\" target=\"_blank\" rel=\"noopener\">查看原文 →</a><span class=\"src-name\">" + r.urlLabel + "</span>" : "—") +
+          "</div>" +
+          "</div>";
+      }).join("");
+  }).join("");
+}
+
+document.querySelectorAll(".chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    const type = chip.dataset.type;
+    document.querySelectorAll(".chip[data-type=\"" + type + "\"]").forEach(c => c.classList.remove("active"));
+    chip.classList.add("active");
+    filters[type] = chip.dataset.val;
+    render();
+  });
+});
+
+async function refreshNow() {
+  const msg = document.getElementById("status-msg");
+  const btn = document.querySelector("button.primary");
+  const initialStamp = DATA.lastUpdated;
+  msg.textContent = "正在触发后台刷新…";
+  if (btn) btn.disabled = true;
+  try {
+    if (window.cowork && window.cowork.runScheduledTask) {
+      await window.cowork.runScheduledTask("lp-tracker-refresh");
+      msg.textContent = "已触发。等待抓取完成…（约 2-5 分钟）";
+      const start = Date.now();
+      const maxMs = 8 * 60 * 1000;
+      let attempts = 0;
+      const timer = setInterval(async () => {
+        attempts++;
+        try {
+          const resp = await fetch(window.location.pathname + "?_ts=" + Date.now(), { cache: "no-store" });
+          const txt = await resp.text();
+          const m = txt.match(/lastUpdated:\s*"([^"]+)"/);
+          if (m && m[1] !== initialStamp) {
+            clearInterval(timer);
+            msg.textContent = "✓ 刷新完成，最新更新：" + m[1] + "（页面即将重新加载）";
+            setTimeout(() => window.location.reload(), 1500);
+            return;
+          }
+        } catch(e) {}
+        msg.textContent = "已触发，等待中…（" + Math.floor((Date.now() - start) / 1000) + "s，最长 8 分钟）";
+        if (Date.now() - start > maxMs) {
+          clearInterval(timer);
+          msg.textContent = "已触发但等待超时；后台可能还在跑，稍后手动刷新页面。";
+          if (btn) btn.disabled = false;
+        }
+      }, 15000);
+    } else {
+      msg.textContent = "未连接到Cowork运行时（此页面可能是Vercel部署版本，需要在Cowork客户端里打开 artifact 才能触发刷新）。";
+      if (btn) btn.disabled = false;
+    }
+  } catch (e) {
+    msg.textContent = "触发失败：" + (e.message || e);
+    if (btn) btn.disabled = false;
+  }
+}
+
+if (!(window.cowork && typeof window.cowork.runScheduledTask === "function")) {
+  const btn = document.querySelector("button.primary");
+  if (btn) btn.style.display = "none";
+  const msg = document.getElementById("status-msg");
+  if (msg) msg.style.display = "none";
+}
+
+render();
+</script>
+</body>
+</html>
