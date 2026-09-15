@@ -42,7 +42,7 @@ jobs:
         run: |
           git config user.name  "lp-tracker[bot]"
           git config user.email "lp-tracker-bot@users.noreply.github.com"
-          git add public/index.html
+          git add docs/index.html
           # Only commit when there are actual changes
           if git diff --staged --quiet; then
             echo "No changes — skipping commit."
