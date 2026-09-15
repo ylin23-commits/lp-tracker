@@ -30,7 +30,7 @@ from zoneinfo import ZoneInfo
 
 # ── Paths & config ────────────────────────────────────────────────────────────
 REPO_ROOT   = Path(__file__).parent.parent
-HTML_PATH   = REPO_ROOT / "public" / "index.html"
+HTML_PATH   = REPO_ROOT / "docs" / "index.html"
 BEIJING_TZ  = ZoneInfo("Asia/Shanghai")
 API_KEY     = os.environ.get("ANTHROPIC_API_KEY", "")
 
