@@ -426,8 +426,11 @@ footer code {
 
 <script>
 const DATA = {
-  lastUpdated: "2026-09-30 11:54",
+  lastUpdated: "2026-10-01 12:03",
   rows: [
+    { date: "2026-10-01", precise: true, cat: "market", level: "provincial", name: "复星医药（600196.SH）· 复星医药：复星医药关于参与设立私募股权投资基金及筹划出售资产进展的公告", action: "上市公司复星医药公告复星医药：复星医药关于参与设立私募股权投资基金及筹划出售资产进展的公告，以LP身份参与产业基金投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；复星医药（600196）；复星医药：复星医药关于参与设立私募股权投资基金及筹划出售资产进展的公告；巨潮结构化层召回（adjunctUrl: finalpage/2026-10-01/1225590814.PDF）", industry: "待补充", url: "http://static.cninfo.com.cn/finalpage/2026-10-01/1225590814.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-10-01", precise: true, cat: "market", level: "provincial", name: "浙版传媒（601921.SH）· 浙版传媒：浙江出版传媒股份有限公司关于参与设立投资基金的公告", action: "上市公司浙版传媒公告浙版传媒：浙江出版传媒股份有限公司关于参与设立投资基金的公告，以LP身份参与产业基金投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；浙版传媒（601921）；浙版传媒：浙江出版传媒股份有限公司关于参与设立投资基金的公告；巨潮结构化层召回（adjunctUrl: finalpage/2026-10-01/1225590608.PDF）", industry: "待补充", url: "http://static.cninfo.com.cn/finalpage/2026-10-01/1225590608.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-09-30", precise: true, cat: "market", level: "provincial", name: "复星医药（02196.HK）· 复星医药：海外监管公告 - 关于参与设立私募股权投资基金及筹划出售资产进展的公告", action: "上市公司复星医药公告复星医药：海外监管公告 - 关于参与设立私募股权投资基金及筹划出售资产进展的公告，以LP身份参与产业基金投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；复星医药（02196）；复星医药：海外监管公告 - 关于参与设立私募股权投资基金及筹划出售资产进展的公告；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-30/1225591330.PDF）", industry: "待补充", url: "http://static.cninfo.com.cn/finalpage/2026-09-30/1225591330.PDF", urlLabel: "巨潮公告" },
     { date: "2026-09-30", precise: true, cat: "market", level: "provincial", name: "鱼跃医疗（002223.SZ）· 鱼跃医疗：关于全资子公司参与认购基金份额的进展公告", action: "上市公司鱼跃医疗公告鱼跃医疗：关于全资子公司参与认购基金份额的进展公告，以LP身份参与产业基金投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；鱼跃医疗（002223）；鱼跃医疗：关于全资子公司参与认购基金份额的进展公告；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-30/1225588411.PDF）", industry: "待补充", url: "http://static.cninfo.com.cn/finalpage/2026-09-30/1225588411.PDF", urlLabel: "巨潮公告" },
     { date: "2026-09-30", precise: true, cat: "market", level: "provincial", name: "鱼跃医疗（002223.SZ）· 鱼跃医疗：关于参与认购基金份额的公告", action: "上市公司鱼跃医疗公告鱼跃医疗：关于参与认购基金份额的公告，以LP身份参与产业基金投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；鱼跃医疗（002223）；鱼跃医疗：关于参与认购基金份额的公告；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-30/1225588448.PDF）", industry: "待补充", url: "http://static.cninfo.com.cn/finalpage/2026-09-30/1225588448.PDF", urlLabel: "巨潮公告" },
     { date: "2026-09-30", precise: true, cat: "market", level: "provincial", name: "新华网（603888.SH）· 新华网：新华网股份有限公司关于全资子公司新华网创业投资有限公司认购私募基金份额的进展公告", action: "上市公司新华网公告新华网：新华网股份有限公司关于全资子公司新华网创业投资有限公司认购私募基金份额的进展公告，以LP身份参与产业基金投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；新华网（603888）；新华网：新华网股份有限公司关于全资子公司新华网创业投资有限公司认购私募基金份额的进展公告；巨潮结构化层召回（adjunctUrl: finalpage/2026-09-30/1225587082.PDF）", industry: "待补充", url: "http://static.cninfo.com.cn/finalpage/2026-09-30/1225587082.PDF", urlLabel: "巨潮公告" },
@@ -1588,7 +1591,7 @@ const CAT_META = {
 };
 
 let filters = { cat: "all", lvl: "all", window: "90" };
-const TODAY = new Date("2026-09-30");
+const TODAY = new Date("2026-10-01");
 const SEVEN_DAYS_AGO = new Date(TODAY); SEVEN_DAYS_AGO.setDate(TODAY.getDate() - 7);
 
 function daysAgo(dateStr) {
