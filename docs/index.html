@@ -426,8 +426,10 @@ footer code {
 
 <script>
 const DATA = {
-  lastUpdated: "2026-10-09 12:30",
+  lastUpdated: "2026-10-10 12:15",
   rows: [
+    { date: "2026-10-10", precise: true, cat: "market", level: "provincial", name: "达瑞电子（300976.SZ）· 达瑞电子：关于全资子公司参与认购投资基金份额的进展公告", action: "上市公司达瑞电子公告达瑞电子：关于全资子公司参与认购投资基金份额的进展公告，以LP身份参与产业基金投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；达瑞电子（300976）；达瑞电子：关于全资子公司参与认购投资基金份额的进展公告；巨潮结构化层召回（adjunctUrl: finalpage/2026-10-10/1225598671.PDF）", industry: "待补充", url: "http://static.cninfo.com.cn/finalpage/2026-10-10/1225598671.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-10-09", precise: true, cat: "market", level: "provincial", name: "置富产业信托（00778.HK）· 置富产业信托：以现金及置富产业信托基金单位向置富资产管理有限公司支付管理人基本费用", action: "上市公司置富产业信托公告置富产业信托：以现金及置富产业信托基金单位向置富资产管理有限公司支付管理人基本费用，以LP身份参与产业基金投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；置富产业信托（00778）；置富产业信托：以现金及置富产业信托基金单位向置富资产管理有限公司支付管理人基本费用；巨潮结构化层召回（adjunctUrl: finalpage/2026-10-09/1225598716.PDF）", industry: "待补充", url: "http://static.cninfo.com.cn/finalpage/2026-10-09/1225598716.PDF", urlLabel: "巨潮公告" },
     { date: "2026-10-09", precise: true, cat: "market", level: "provincial", name: "敏芯股份（688286.SH）· 敏芯股份：苏州敏芯微电子技术股份有限公司关于参与认购私募基金份额暨关联交易的进展公告", action: "上市公司敏芯股份公告敏芯股份：苏州敏芯微电子技术股份有限公司关于参与认购私募基金份额暨关联交易的进展公告，以LP身份参与产业基金投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；敏芯股份（688286）；敏芯股份：苏州敏芯微电子技术股份有限公司关于参与认购私募基金份额暨关联交易的进展公告；巨潮结构化层召回（adjunctUrl: finalpage/2026-10-09/1225597895.PDF）", industry: "待补充", url: "http://static.cninfo.com.cn/finalpage/2026-10-09/1225597895.PDF", urlLabel: "巨潮公告" },
     { date: "2026-10-09", precise: true, cat: "market", level: "provincial", name: "传化智联（002010.SZ）· 传化智联：关于转让部分私募基金认购份额暨关联交易的公告", action: "上市公司传化智联公告传化智联：关于转让部分私募基金认购份额暨关联交易的公告，以LP身份参与产业基金投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；传化智联（002010）；传化智联：关于转让部分私募基金认购份额暨关联交易的公告；巨潮结构化层召回（adjunctUrl: finalpage/2026-10-09/1225598195.PDF）", industry: "待补充", url: "http://static.cninfo.com.cn/finalpage/2026-10-09/1225598195.PDF", urlLabel: "巨潮公告" },
     { date: "2026-10-09", precise: true, cat: "market", level: "provincial", name: "新安股份（600596.SH）· 新安股份：新安股份关于受让私募基金认购份额暨共同投资关联交易的公告", action: "上市公司新安股份公告新安股份：新安股份关于受让私募基金认购份额暨共同投资关联交易的公告，以LP身份参与产业基金投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；新安股份（600596）；新安股份：新安股份关于受让私募基金认购份额暨共同投资关联交易的公告；巨潮结构化层召回（adjunctUrl: finalpage/2026-10-09/1225597137.PDF）", industry: "待补充", url: "http://static.cninfo.com.cn/finalpage/2026-10-09/1225597137.PDF", urlLabel: "巨潮公告" },
@@ -1598,7 +1600,7 @@ const CAT_META = {
 };
 
 let filters = { cat: "all", lvl: "all", window: "90" };
-const TODAY = new Date("2026-10-09");
+const TODAY = new Date("2026-10-10");
 const SEVEN_DAYS_AGO = new Date(TODAY); SEVEN_DAYS_AGO.setDate(TODAY.getDate() - 7);
 
 function daysAgo(dateStr) {
