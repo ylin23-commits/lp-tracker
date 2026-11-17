@@ -426,8 +426,11 @@ footer code {
 
 <script>
 const DATA = {
-  lastUpdated: "2026-11-16 12:41",
+  lastUpdated: "2026-11-17 14:27",
   rows: [
+    { date: "2026-11-17", precise: true, cat: "market", level: "provincial", name: "华天科技（002185.SZ）· 华天科技：关于下属企业出资参与设立产业基金的公告", action: "上市公司华天科技公告华天科技：关于下属企业出资参与设立产业基金的公告，以LP身份参与产业基金投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；华天科技（002185）；华天科技：关于下属企业出资参与设立产业基金的公告；巨潮结构化层召回（adjunctUrl: finalpage/2026-11-17/1225674222.PDF）", industry: "待补充", url: "http://static.cninfo.com.cn/finalpage/2026-11-17/1225674222.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-11-17", precise: true, cat: "market", level: "provincial", name: "瑞玛精密（002976.SZ）· 瑞玛精密：关于投资参与设立产业基金的公告", action: "上市公司瑞玛精密公告瑞玛精密：关于投资参与设立产业基金的公告，以LP身份参与产业基金投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；瑞玛精密（002976）；瑞玛精密：关于投资参与设立产业基金的公告；巨潮结构化层召回（adjunctUrl: finalpage/2026-11-17/1225674392.PDF）", industry: "待补充", url: "http://static.cninfo.com.cn/finalpage/2026-11-17/1225674392.PDF", urlLabel: "巨潮公告" },
+    { date: "2026-11-16", precise: true, cat: "market", level: "provincial", name: "科思股份（300856.SZ）· 科思股份：关于参与投资产业基金暨关联交易的公告", action: "上市公司科思股份公告科思股份：关于参与投资产业基金暨关联交易的公告，以LP身份参与产业基金投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；科思股份（300856）；科思股份：关于参与投资产业基金暨关联交易的公告；巨潮结构化层召回（adjunctUrl: finalpage/2026-11-16/1225673074.PDF）", industry: "待补充", url: "http://static.cninfo.com.cn/finalpage/2026-11-16/1225673074.PDF", urlLabel: "巨潮公告" },
     { date: "2026-11-14", precise: true, cat: "market", level: "provincial", name: "神驰机电（603109.SH）· 神驰机电：关于认购私募基金份额的进展公告", action: "上市公司神驰机电公告神驰机电：关于认购私募基金份额的进展公告，以LP身份参与产业基金投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；神驰机电（603109）；神驰机电：关于认购私募基金份额的进展公告；巨潮结构化层召回（adjunctUrl: finalpage/2026-11-14/1225670292.PDF）", industry: "待补充", url: "http://static.cninfo.com.cn/finalpage/2026-11-14/1225670292.PDF", urlLabel: "巨潮公告" },
     { date: "2026-11-14", precise: true, cat: "market", level: "provincial", name: "拓荆科技（688072.SH）· 拓荆科技：关于全资子公司参与设立私募基金暨关联交易的公告", action: "上市公司拓荆科技公告拓荆科技：关于全资子公司参与设立私募基金暨关联交易的公告，以LP身份参与产业基金投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；拓荆科技（688072）；拓荆科技：关于全资子公司参与设立私募基金暨关联交易的公告；巨潮结构化层召回（adjunctUrl: finalpage/2026-11-14/1225672211.PDF）", industry: "待补充", url: "http://static.cninfo.com.cn/finalpage/2026-11-14/1225672211.PDF", urlLabel: "巨潮公告" },
     { date: "2026-11-14", precise: true, cat: "market", level: "provincial", name: "炬芯科技（688049.SH）· 炬芯科技：关于参与设立产业投资基金事项暨关联交易的进展公告", action: "上市公司炬芯科技公告炬芯科技：关于参与设立产业投资基金事项暨关联交易的进展公告，以LP身份参与产业基金投资", size: "详见公告", fbType: "none", fbText: "CVC/上市公司", detail: "上市公司CVC出资；炬芯科技（688049）；炬芯科技：关于参与设立产业投资基金事项暨关联交易的进展公告；巨潮结构化层召回（adjunctUrl: finalpage/2026-11-14/1225670535.PDF）", industry: "待补充", url: "http://static.cninfo.com.cn/finalpage/2026-11-14/1225670535.PDF", urlLabel: "巨潮公告" },
@@ -1704,7 +1707,7 @@ const CAT_META = {
 };
 
 let filters = { cat: "all", lvl: "all", window: "90" };
-const TODAY = new Date("2026-11-16");
+const TODAY = new Date("2026-11-17");
 const SEVEN_DAYS_AGO = new Date(TODAY); SEVEN_DAYS_AGO.setDate(TODAY.getDate() - 7);
 
 function daysAgo(dateStr) {
